@@ -2438,22 +2438,58 @@ async function handleLogout() {
 function showApp() {
   document.getElementById('loginPage').style.display = 'none';
   document.getElementById('mainApp').style.display = 'flex';
+  
+  startBackgroundSync();
+  
+  if (localStorage.getItem('usageAutoRefresh') === '1') {
+    const cb = document.getElementById('usageAutoRefresh');
+    if (cb) { cb.checked = true; toggleUsageAutoRefresh(true, true); }
+  }
+}
+
+let syncIntervals = {};
+let syncTicks = 0;
+
+function startBackgroundSync() {
+  // Fire initial batch
   fetchData();
   fetchNewData();
   fetchHealthHistory();
   fetchMemoryFiles();
   fetchKeyFiles();
   checkMFAStatus();
+  fetchTailscaleStatus();
+  fetchLifetimeStats();
   
-  if (localStorage.getItem('usageAutoRefresh') === '1') {
-    const cb = document.getElementById('usageAutoRefresh');
-    if (cb) { cb.checked = true; toggleUsageAutoRefresh(true, true); }
-  }
-  setInterval(fetchData, 5000);
-  setInterval(fetchNewData, 15000);
-  setInterval(fetchHealthHistory, 60000);
-  setInterval(fetchMemoryFiles, 30000);
-  setInterval(fetchKeyFiles, 30000);
+  if (costs.perDay) calculateStreak();
+  updatePageTitle();
+
+  // One master loop to rule them all (every 5 seconds)
+  if (syncIntervals.master) clearInterval(syncIntervals.master);
+  syncIntervals.master = setInterval(() => {
+    syncTicks++;
+    fetchData(); // Every 5s
+    updatePageTitle(); // Every 5s
+    
+    if (syncTicks % 2 === 0) {
+      if (costs.perDay) calculateStreak(); // Every 10s
+    }
+    
+    if (syncTicks % 3 === 0) {
+      fetchNewData(); // Every 15s
+    }
+    
+    if (syncTicks % 6 === 0) {
+      fetchMemoryFiles(); // Every 30s
+      fetchKeyFiles(); // Every 30s
+      fetchTailscaleStatus(); // Every 30s
+    }
+    
+    if (syncTicks % 12 === 0) {
+      fetchHealthHistory(); // Every 60s
+      fetchLifetimeStats(); // Every 60s
+    }
+  }, 5000);
 }
 
 function showLogin() {
@@ -5228,21 +5264,21 @@ toggleSessionExpand = function(key, e) {
   } catch {}
 };
 
-// Fetch new data on load
-fetchTailscaleStatus();
-fetchLifetimeStats();
+// Fetch new data on load (Now handled by startBackgroundSync)
+// fetchTailscaleStatus();
+// fetchLifetimeStats();
 
-// Periodic updates
-setInterval(fetchTailscaleStatus, 30000);
-setInterval(fetchLifetimeStats, 60000);
-setInterval(updatePageTitle, 5000);
-setInterval(() => { if (costs.perDay) calculateStreak(); }, 10000);
+// Periodic updates (Now handled by startBackgroundSync)
+// setInterval(fetchTailscaleStatus, 30000);
+// setInterval(fetchLifetimeStats, 60000);
+// setInterval(updatePageTitle, 5000);
+// setInterval(() => { if (costs.perDay) calculateStreak(); }, 10000);
 
-// Initial calls
-setTimeout(() => {
-  if (costs.perDay) calculateStreak();
-  updatePageTitle();
-}, 2000);
+// Initial calls (Now handled by startBackgroundSync)
+// setTimeout(() => {
+//   if (costs.perDay) calculateStreak();
+//   updatePageTitle();
+// }, 2000);
 </script>
 </body>
 </html>

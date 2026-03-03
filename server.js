@@ -24,9 +24,9 @@ const mfaSecretFile = path.join(AUTH_DATA_DIR, 'mfa-secret.txt');
 const skillsDir = path.join(WORKSPACE_DIR, 'skills');
 const configFiles = [
   { name: 'openclaw-gateway.service', path: path.join(os.homedir(), '.config/systemd/user/openclaw-gateway.service') },
-  { name: 'openclaw-config.json',     path: path.join(os.homedir(), '.openclaw/config.json') },
+  { name: 'openclaw-config.json', path: path.join(os.homedir(), '.openclaw/config.json') },
 ];
-const workspaceFilenames = ['AGENTS.md','HEARTBEAT.md','IDENTITY.md','MEMORY.md','SOUL.md','TOOLS.md','USER.md'];
+const workspaceFilenames = ['AGENTS.md', 'HEARTBEAT.md', 'IDENTITY.md', 'MEMORY.md', 'SOUL.md', 'TOOLS.md', 'USER.md'];
 const claudeUsageFile = path.join(dataDir, 'claude-usage.json');
 const geminiUsageFile = path.join(dataDir, 'gemini-usage.json');
 const scrapeScript = path.join(WORKSPACE_DIR, 'scripts', 'scrape-claude-usage.sh');
@@ -124,9 +124,9 @@ function estimateMsgCost(msg) {
   );
 }
 
-try { fs.mkdirSync(dataDir, { recursive: true }); } catch {}
-try { fs.mkdirSync(path.dirname(auditLogPath), { recursive: true }); } catch {}
-try { fs.mkdirSync(path.dirname(credentialsFile), { recursive: true }); } catch {}
+try { fs.mkdirSync(dataDir, { recursive: true }); } catch { }
+try { fs.mkdirSync(path.dirname(auditLogPath), { recursive: true }); } catch { }
+try { fs.mkdirSync(path.dirname(credentialsFile), { recursive: true }); } catch { }
 
 let DASHBOARD_TOKEN = process.env.DASHBOARD_TOKEN;
 if (!DASHBOARD_TOKEN) {
@@ -149,7 +149,7 @@ let MFA_SECRET = process.env.DASHBOARD_MFA_SECRET;
 if (!MFA_SECRET && fs.existsSync(mfaSecretFile)) {
   try {
     MFA_SECRET = fs.readFileSync(mfaSecretFile, 'utf8').trim();
-  } catch {}
+  } catch { }
 }
 
 const sessions = new Map();
@@ -251,12 +251,12 @@ function generateTOTP(secret, timeStep = 30, digits = 6, window = 0) {
   const counterBuffer = Buffer.alloc(8);
   counterBuffer.writeUInt32BE(Math.floor(counter / 0x100000000), 0);
   counterBuffer.writeUInt32BE(counter & 0xFFFFFFFF, 4);
-  
+
   const decodedSecret = base32Decode(secret);
   const hmac = crypto.createHmac('sha1', decodedSecret);
   hmac.update(counterBuffer);
   const hash = hmac.digest();
-  
+
   const offset = hash[hash.length - 1] & 0x0f;
   const binary = ((hash[offset] & 0x7f) << 24) | ((hash[offset + 1] & 0xff) << 16) | ((hash[offset + 2] & 0xff) << 8) | (hash[offset + 3] & 0xff);
   const otp = binary % (10 ** digits);
@@ -288,7 +288,7 @@ function auditLog(event, ip, details = {}) {
       fs.writeFileSync(tmpPath, keep, 'utf8');
       fs.renameSync(tmpPath, auditLogPath);
     }
-  } catch {}
+  } catch { }
 }
 
 function setSecurityHeaders(res) {
@@ -374,16 +374,16 @@ function isAuthenticated(req) {
     token = url.searchParams.get('token');
   }
   if (!token) return false;
-  
+
   const session = sessions.get(token);
   if (!session) return false;
-  
+
   const now = Date.now();
   if (now > session.expiresAt) {
     sessions.delete(token);
     return false;
   }
-  
+
   if (!session.rememberMe) {
     if (now - session.lastActivity > SESSION_ACTIVITY_TIMEOUT) {
       sessions.delete(token);
@@ -391,7 +391,7 @@ function isAuthenticated(req) {
     }
     session.lastActivity = now;
   }
-  
+
   return true;
 }
 
@@ -404,7 +404,7 @@ function requireAuth(req, res) {
     res.end(JSON.stringify({ error: 'Too many failed attempts', retryAfter: limitCheck.remainingSeconds }));
     return false;
   }
-  
+
   if (!isAuthenticated(req)) {
     const sanitizedUrl = req.url.replace(/token=[^&]+/g, 'token=REDACTED');
     setSecurityHeaders(res);
@@ -425,7 +425,7 @@ function getGitRepos() {
         if (fs.existsSync(path.join(full, '.git'))) repos.push({ path: full, name: d });
       });
     }
-  } catch {}
+  } catch { }
   if (fs.existsSync(path.join(WORKSPACE_DIR, '.git'))) repos.push({ path: WORKSPACE_DIR, name: path.basename(WORKSPACE_DIR) });
   return repos;
 }
@@ -443,7 +443,7 @@ function resolveName(key) {
         const job = jobs.find(j => j.id === cronUuid);
         if (job && job.name) return job.name;
       }
-    } catch {}
+    } catch { }
     const cronPart = key.split('cron:')[1] || '';
     const cronUuid = cronPart.split(':')[0];
     return 'Cron: ' + cronUuid.substring(0, 8);
@@ -478,7 +478,7 @@ function getLastMessage(sessionId) {
           }
         }
         if (text) return text.replace(/\n/g, ' ').substring(0, 80);
-      } catch {}
+      } catch { }
     }
     return '';
   } catch { return ''; }
@@ -488,32 +488,96 @@ function isSessionFile(f) { return f.endsWith('.jsonl') || f.includes('.jsonl.re
 function extractSessionId(f) { return f.replace(/\.jsonl(?:\.reset\.\d+)?$/, ''); }
 
 let sessionCostCache = {};
-let sessionCostCacheTime = 0;
+let globalUsageCache = null;
+let globalCostCache = null;
+let lastCacheSync = 0;
+
+function syncAllCaches() {
+  const now = Date.now();
+  if (now - lastCacheSync < 60000 && globalUsageCache && globalCostCache) return;
+  lastCacheSync = now;
+
+  const perSession = {};
+  const perModel5h = {};
+  const perModelWeek = {};
+  const perDayCost = {};
+  const recentMessages = [];
+  let totalCost = 0;
+
+  const files = fs.readdirSync(sessDir).filter(f => isSessionFile(f));
+  const fiveHoursMs = 5 * 3600000;
+  const oneWeekMs = 7 * 86400000;
+
+  for (const file of files) {
+    const sid = extractSessionId(file);
+    let scost = 0;
+    try {
+      const p = path.join(sessDir, file);
+      if (fs.statSync(p).mtimeMs < now - oneWeekMs) continue;
+
+      const lines = fs.readFileSync(p, 'utf8').split('\n');
+      for (const line of lines) {
+        if (!line.trim()) continue;
+        try {
+          const d = JSON.parse(line);
+          if (d.type !== 'message') continue;
+          const msg = d.message;
+          if (!msg || !msg.usage) continue;
+
+          const ts = d.timestamp ? new Date(d.timestamp).getTime() : 0;
+          if (!ts) continue;
+
+          const provider = normalizeProvider(msg.provider);
+          const model = normalizeModel(provider, msg.model);
+          const modelKey = `${provider}/${model}`;
+
+          const inTok = Math.max(0, toNum(msg.usage.input));
+          const outTok = Math.max(0, toNum(msg.usage.output));
+          const cacheReadTok = Math.max(0, toNum(msg.usage.cacheRead));
+          const cacheWriteTok = Math.max(0, toNum(msg.usage.cacheWrite));
+          const cost = estimateMsgCost(msg);
+
+          scost += cost;
+          totalCost += cost;
+
+          const day = d.timestamp.substring(0, 10);
+          perDayCost[day] = (perDayCost[day] || 0) + cost;
+
+          if (now - ts < fiveHoursMs) {
+            if (!perModel5h[modelKey]) perModel5h[modelKey] = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cost: 0, calls: 0 };
+            perModel5h[modelKey].input += inTok;
+            perModel5h[modelKey].output += outTok;
+            perModel5h[modelKey].cacheRead += cacheReadTok;
+            perModel5h[modelKey].cacheWrite += cacheWriteTok;
+            perModel5h[modelKey].cost += cost;
+            perModel5h[modelKey].calls++;
+            recentMessages.push({ ts, model: modelKey, input: inTok, output: outTok, cost });
+          }
+
+          if (now - ts < oneWeekMs) {
+            if (!perModelWeek[modelKey]) perModelWeek[modelKey] = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cost: 0, calls: 0 };
+            perModelWeek[modelKey].input += inTok;
+            perModelWeek[modelKey].output += outTok;
+            perModelWeek[modelKey].cacheRead += cacheReadTok;
+            perModelWeek[modelKey].cacheWrite += cacheWriteTok;
+            perModelWeek[modelKey].cost += cost;
+            perModelWeek[modelKey].calls++;
+          }
+        } catch { }
+      }
+    } catch { }
+    if (scost > 0) perSession[sid] = scost;
+  }
+
+  sessionCostCache = perSession;
+  recentMessages.sort((a, b) => b.ts - a.ts);
+
+  globalUsageCache = { perModel5h, perModelWeek, recentMessages, perDayCost };
+  globalCostCache = { total: totalCost, perDay: perDayCost, perSession };
+}
 
 function getSessionCost(sessionId) {
-  const now = Date.now();
-  if (now - sessionCostCacheTime > 60000) {
-    sessionCostCache = {};
-    sessionCostCacheTime = now;
-    try {
-      const files = fs.readdirSync(sessDir).filter(f => isSessionFile(f));
-      for (const file of files) {
-        const sid = extractSessionId(file);
-        let total = 0;
-        const lines = fs.readFileSync(path.join(sessDir, file), 'utf8').split('\n');
-        for (const line of lines) {
-          if (!line.trim()) continue;
-          try {
-            const d = JSON.parse(line);
-            if (d.type !== 'message') continue;
-            const c = estimateMsgCost(d.message || {});
-            if (c > 0) total += c;
-          } catch {}
-        }
-        if (total > 0) sessionCostCache[sid] = Math.round(total * 100) / 100;
-      }
-    } catch {}
-  }
+  syncAllCaches();
   return sessionCostCache[sessionId] || 0;
 }
 
@@ -541,55 +605,25 @@ function getSessionsJson() {
 }
 
 function getCostData() {
+  syncAllCaches();
   try {
-    const files = fs.readdirSync(sessDir).filter(f => isSessionFile(f));
-    const perModel = {};
-    const perDay = {};
-    const perSession = {};
-    let total = 0;
-
-    for (const file of files) {
-      const sid = extractSessionId(file);
-      let scost = 0;
-      const lines = fs.readFileSync(path.join(sessDir, file), 'utf8').split('\n');
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        try {
-          const d = JSON.parse(line);
-          if (d.type !== 'message') continue;
-          const msg = d.message;
-          if (!msg || !msg.usage) continue;
-          const c = estimateMsgCost(msg);
-          if (c <= 0) continue;
-          const provider = normalizeProvider(msg.provider);
-          const model = normalizeModel(provider, msg.model);
-          if (model.includes('delivery-mirror')) continue;
-          const ts = d.timestamp || '';
-          const day = ts.substring(0, 10);
-          const modelKey = `${provider}/${model}`;
-          perModel[modelKey] = (perModel[modelKey] || 0) + c;
-          perDay[day] = (perDay[day] || 0) + c;
-          scost += c;
-          total += c;
-        } catch {}
-      }
-      if (scost > 0) perSession[sid] = scost;
-    }
-
+    const r = globalCostCache;
+    if (!r) throw new Error();
     const now = new Date();
     const todayKey = now.toISOString().substring(0, 10);
     const weekAgo = new Date(now - 7 * 86400000).toISOString().substring(0, 10);
+
     let weekCost = 0;
-    for (const [d, c] of Object.entries(perDay)) {
+    for (const [d, c] of Object.entries(r.perDay)) {
       if (d >= weekAgo) weekCost += c;
     }
 
     return {
-      total: Math.round(total * 100) / 100,
-      today: Math.round((perDay[todayKey] || 0) * 100) / 100,
+      total: Math.round(r.total * 100) / 100,
+      today: Math.round((r.perDay[todayKey] || 0) * 100) / 100,
       week: Math.round(weekCost * 100) / 100,
-      perModel,
-      perDay: Object.fromEntries(Object.entries(perDay).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 14)),
+      perModel: {}, // Legacy compat
+      perDay: Object.fromEntries(Object.entries(r.perDay).sort((a, b) => b[0].localeCompare(a[0])).slice(0, 14)),
       perSession: (() => {
         let sidLabels = {};
         try {
@@ -597,124 +631,34 @@ function getCostData() {
           for (const [key, val] of Object.entries(sData)) {
             if (val.sessionId) sidLabels[val.sessionId] = val.label || key.split(':').slice(2).join(':');
           }
-        } catch {}
+        } catch { }
         return Object.fromEntries(
-          Object.entries(perSession).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([sid, cost]) => {
-            let label = sidLabels[sid] || null;
-            if (!label) {
-              try {
-                const jf = path.join(sessDir, sid + '.jsonl');
-                if (!fs.existsSync(jf)) {
-                  const del = fs.readdirSync(sessDir).find(f => f.startsWith(sid) && f.includes('.deleted'));
-                  if (del) { }
-                }
-                if (fs.existsSync(jf)) {
-                  const lines = fs.readFileSync(jf, 'utf8').split('\n');
-                  for (const l of lines) {
-                    if (!l.includes('"user"')) continue;
-                    try {
-                      const d = JSON.parse(l);
-                      const c = d.message?.content;
-                      const txt = typeof c === 'string' ? c : Array.isArray(c) ? c.find(x => x.type === 'text')?.text || '' : '';
-                      if (txt) {
-                        let t = txt.replace(/\n/g, ' ').trim();
-                        const bgMatch = t.match(/background task "([^"]+)"/i);
-                        if (bgMatch) t = 'Sub: ' + bgMatch[1];
-                        const cronMatch = t.match(/\[cron:([^\]]+)\]/);
-                        if (cronMatch) {
-                          let cronName = cronMatch[1].substring(0, 8);
-                          try {
-                            const cj = JSON.parse(fs.readFileSync(cronFile, 'utf8'));
-                            const job = cj.jobs?.find(j => j.id?.startsWith(cronMatch[1].substring(0, 8)));
-                            if (job?.name) cronName = job.name;
-                          } catch {}
-                          t = 'Cron: ' + cronName;
-                        }
-                        if (t.startsWith('System:')) t = t.substring(7).trim();
-                        t = t.replace(/^\[\d{4}-\d{2}-\d{2}[^\]]*\]\s*/, '');
-                        if (t.startsWith('You are running a boot')) t = 'Boot check';
-                        if (t.match(/whatsapp/i)) t = 'WhatsApp session';
-                        const subMatch2 = t.match(/background task "([^"]+)"/i);
-                        if (!bgMatch && subMatch2) t = 'Sub: ' + subMatch2[1];
-                        label = t.substring(0, 35); if (t.length > 35) label += '…';
-                        break;
-                      }
-                    } catch {}
-                  }
-                }
-              } catch {}
-            }
-            return [sid, { cost, label: label || ('session-' + sid.substring(0, 8)) }];
+          Object.entries(r.perSession).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([sid, cost]) => {
+            return [sid, { cost, label: sidLabels[sid] || ('session-' + sid.substring(0, 8)) }];
           })
         );
       })()
     };
-  } catch (e) { return { total: 0, today: 0, week: 0, perModel: {}, perDay: {}, perSession: {} }; }
+  } catch (e) {
+    return { total: 0, today: 0, week: 0, perModel: {}, perDay: {}, perSession: {} };
+  }
 }
 
 let costCache = null;
 let costCacheTime = 0;
 
 function getUsageWindows() {
+  syncAllCaches();
   try {
+    const r = globalUsageCache;
+    if (!r) throw new Error();
     const now = Date.now();
     const fiveHoursMs = 5 * 3600000;
-    const oneWeekMs = 7 * 86400000;
-    const files = fs.readdirSync(sessDir).filter(f => {
-      if (!f.endsWith('.jsonl')) return false;
-      try { return fs.statSync(path.join(sessDir, f)).mtimeMs > now - oneWeekMs; } catch { return false; }
-    });
 
-    const perModel5h = {};
-    const perModelWeek = {};
-    const recentMessages = [];
-
-    for (const file of files) {
-      const lines = fs.readFileSync(path.join(sessDir, file), 'utf8').split('\n');
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        try {
-          const d = JSON.parse(line);
-          if (d.type !== 'message') continue;
-          const msg = d.message;
-          if (!msg || !msg.usage) continue;
-          const ts = d.timestamp ? new Date(d.timestamp).getTime() : 0;
-          if (!ts) continue;
-          const provider = normalizeProvider(msg.provider);
-          const model = normalizeModel(provider, msg.model);
-          const modelKey = `${provider}/${model}`;
-          const inTok = Math.max(0, toNum(msg.usage.input));
-          const outTok = Math.max(0, toNum(msg.usage.output));
-          const cacheReadTok = Math.max(0, toNum(msg.usage.cacheRead));
-          const cacheWriteTok = Math.max(0, toNum(msg.usage.cacheWrite));
-          const cost = estimateMsgCost(msg);
-
-          if (now - ts < fiveHoursMs) {
-            if (!perModel5h[modelKey]) perModel5h[modelKey] = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cost: 0, calls: 0 };
-            perModel5h[modelKey].input += inTok;
-            perModel5h[modelKey].output += outTok;
-            perModel5h[modelKey].cacheRead += cacheReadTok;
-            perModel5h[modelKey].cacheWrite += cacheWriteTok;
-            perModel5h[modelKey].cost += cost;
-            perModel5h[modelKey].calls++;
-          }
-          if (now - ts < oneWeekMs) {
-            if (!perModelWeek[modelKey]) perModelWeek[modelKey] = { input: 0, output: 0, cacheRead: 0, cacheWrite: 0, cost: 0, calls: 0 };
-            perModelWeek[modelKey].input += inTok;
-            perModelWeek[modelKey].output += outTok;
-            perModelWeek[modelKey].cacheRead += cacheReadTok;
-            perModelWeek[modelKey].cacheWrite += cacheWriteTok;
-            perModelWeek[modelKey].cost += cost;
-            perModelWeek[modelKey].calls++;
-          }
-          if (now - ts < fiveHoursMs) {
-            recentMessages.push({ ts, model: modelKey, input: inTok, output: outTok, cacheRead: cacheReadTok, cacheWrite: cacheWriteTok, cost });
-          }
-        } catch {}
-      }
-    }
-
-    recentMessages.sort((a, b) => b.ts - a.ts);
+    // We already have perModel5h, perModelWeek, recentMessages from the cache
+    const perModel5h = r.perModel5h;
+    const perModelWeek = r.perModelWeek;
+    const recentMessages = r.recentMessages;
 
     const estimatedLimits = { opus: 88000, sonnet: 220000 };
 
@@ -824,7 +768,7 @@ function getRateLimitEvents() {
               events.push({ ts, type: 'rate_limit', detail: text.substring(0, 200) });
             }
           }
-        } catch {}
+        } catch { }
       }
     }
     return events;
@@ -886,14 +830,14 @@ function getSystemStats() {
       try {
         const tempRaw = fs.readFileSync('/sys/class/thermal/thermal_zone0/temp', 'utf8').trim();
         cpuTemp = parseInt(tempRaw, 10) / 1000;
-      } catch {}
+      } catch { }
     } else if (process.platform === 'darwin') {
       try {
         const { execSync } = require('child_process');
         const out = execSync('osx-cpu-temp 2>/dev/null || true', { encoding: 'utf8', timeout: 2000 }).trim();
         const match = out.match(/(\d+(?:\.\d+)?)/);
         if (match) cpuTemp = parseFloat(match[1]);
-      } catch {}
+      } catch { }
     }
 
     const loadAvg = os.loadavg();
@@ -922,6 +866,18 @@ function getSystemStats() {
           diskUsed = usedGB + 'G';
           diskTotal = totalGB + 'G';
         }
+      } else if (process.platform === 'win32') {
+        const psCmd = 'powershell -NoProfile -Command "Get-CimInstance Win32_LogicalDisk | Where-Object DeviceID -eq \'C:\' | Select-Object Size,FreeSpace | ConvertTo-Json"';
+        const psOut = execSync(psCmd, { encoding: 'utf8' });
+        const diskInfo = JSON.parse(psOut);
+        if (diskInfo && diskInfo.Size) {
+          const totalBytes = diskInfo.Size;
+          const freeBytes = diskInfo.FreeSpace || 0;
+          const usedBytes = totalBytes - freeBytes;
+          diskPercent = Math.round((usedBytes / totalBytes) * 100);
+          diskUsed = Math.round(usedBytes / (1024 * 1024 * 1024)) + 'G';
+          diskTotal = Math.round(totalBytes / (1024 * 1024 * 1024)) + 'G';
+        }
       } else {
         const df = execSync("df / --output=pcent,used,size -B1G | tail -1", { encoding: 'utf8' }).trim();
         const parts = df.split(/\s+/);
@@ -929,7 +885,7 @@ function getSystemStats() {
         diskUsed = (parts[1] || '') + 'G';
         diskTotal = (parts[2] || '') + 'G';
       }
-    } catch {}
+    } catch { }
 
     let crashCount = 0;
     let crashesToday = 0;
@@ -945,7 +901,7 @@ function getSystemStats() {
           logs = execSync("journalctl --user -u openclaw --since '7 days ago' --no-pager -o short 2>/dev/null | grep -ci 'SIGABRT\\|SIGSEGV\\|exit code [1-9]\\|process crashed\\|fatal error' || echo 0", { encoding: 'utf8' }).trim();
         }
         crashCount = parseInt(logs, 10) || 0;
-      } catch {}
+      } catch { }
       try {
         const { execSync } = require('child_process');
         // Try system scope first, then user scope
@@ -957,7 +913,7 @@ function getSystemStats() {
           logs = execSync("journalctl --user -u openclaw --since today --no-pager -o short 2>/dev/null | grep -ci 'SIGABRT\\|SIGSEGV\\|exit code [1-9]\\|process crashed\\|fatal error' || echo 0", { encoding: 'utf8' }).trim();
         }
         crashesToday = parseInt(logs, 10) || 0;
-      } catch {}
+      } catch { }
     }
 
     return {
@@ -994,7 +950,7 @@ function watchSessionFile(file) {
   try {
     _fileSizes[file] = fs.statSync(filePath).size;
   } catch { _fileSizes[file] = 0; }
-  
+
   try {
     _fileWatchers[file] = fs.watch(filePath, (eventType) => {
       if (eventType !== 'change') return;
@@ -1007,11 +963,11 @@ function watchSessionFile(file) {
         fs.closeSync(fd);
         _fileSizes[file] = stats.size;
         buffer.toString('utf8').split('\n').filter(l => l.trim()).forEach(line => {
-          try { const data = JSON.parse(line); data._sessionKey = sessionKey; broadcastLiveEvent(data); } catch {}
+          try { const data = JSON.parse(line); data._sessionKey = sessionKey; broadcastLiveEvent(data); } catch { }
         });
-      } catch {}
+      } catch { }
     });
-  } catch {}
+  } catch { }
 }
 
 function startLiveWatcher() {
@@ -1020,41 +976,41 @@ function startLiveWatcher() {
     fs.readdirSync(sessDir).filter(f => isSessionFile(f)).forEach(watchSessionFile);
     liveWatcher = fs.watch(sessDir, (eventType, filename) => {
       if (filename && isSessionFile(filename) && !_fileWatchers[filename]) {
-        try { if (fs.existsSync(path.join(sessDir, filename))) watchSessionFile(filename); } catch {}
+        try { if (fs.existsSync(path.join(sessDir, filename))) watchSessionFile(filename); } catch { }
       }
     });
-  } catch {}
+  } catch { }
 }
 
 function broadcastLiveEvent(data) {
   if (liveClients.length === 0) return;
-  
+
   const event = formatLiveEvent(data);
   if (!event) return;
-  
+
   const message = `data: ${JSON.stringify(event)}\n\n`;
   liveClients.forEach(res => {
     try {
       res.write(message);
-    } catch {}
+    } catch { }
   });
 }
 
 function formatLiveEvent(data) {
   const timestamp = data.timestamp || new Date().toISOString();
   const sessionKey = data._sessionKey || data.sessionId || 'unknown';
-  
+
   const sessions = getSessionsJson();
   const session = sessions.find(s => s.sessionId === sessionKey || s.key.includes(sessionKey));
   const label = session ? session.label : sessionKey.substring(0, 8);
-  
+
   if (data.type === 'message') {
     const msg = data.message;
     if (!msg) return null;
-    
+
     const role = msg.role || 'unknown';
     let content = '';
-    
+
     if (Array.isArray(msg.content)) {
       for (const block of msg.content) {
         if (block.type === 'text' && block.text) {
@@ -1078,14 +1034,14 @@ function formatLiveEvent(data) {
     } else if (typeof msg.content === 'string') {
       content = msg.content.substring(0, 150);
     }
-    
+
     if (!content && msg.type === 'tool_result') {
       const rc = typeof msg.content === 'string' ? msg.content : JSON.stringify(msg.content || '');
       content = `📋 ${rc.substring(0, 100)}`;
     }
-    
+
     if (!content) return null;
-    
+
     return {
       timestamp,
       session: label,
@@ -1093,7 +1049,7 @@ function formatLiveEvent(data) {
       content: content.replace(/\n/g, ' ').trim()
     };
   }
-  
+
   return null;
 }
 
@@ -1107,14 +1063,14 @@ function getCronJobs() {
         const parts = humanSchedule.split(' ');
         if (parts.length === 5) {
           const [min, hour, dom, mon, dow] = parts;
-          const dowNames = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+          const dowNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
           let readable = '';
           if (dow !== '*') readable = dowNames[parseInt(dow)] || dow;
-          if (hour !== '*' && min !== '*') readable += (readable ? ' ' : '') + `${hour.padStart(2,'0')}:${min.padStart(2,'0')}`;
+          if (hour !== '*' && min !== '*') readable += (readable ? ' ' : '') + `${hour.padStart(2, '0')}:${min.padStart(2, '0')}`;
           if (j.schedule?.tz) readable += ` (${j.schedule.tz.split('/').pop()})`;
           if (readable) humanSchedule = readable;
         }
-      } catch {}
+      } catch { }
       return {
         id: j.id,
         name: j.name || j.id.substring(0, 8),
@@ -1143,7 +1099,7 @@ function getGitActivity() {
           const [hash, msg, ts] = line.split('|');
           commits.push({ repo: repo.name, hash: (hash || '').substring(0, 7), message: msg || '', timestamp: parseInt(ts || '0') * 1000 });
         });
-      } catch {}
+      } catch { }
     }
     commits.sort((a, b) => b.timestamp - a.timestamp);
     return commits.slice(0, 15);
@@ -1174,7 +1130,7 @@ function getServicesStatus() {
       try {
         execSync(cmd, { stdio: 'ignore', timeout: 3000 });
         return true;
-      } catch {}
+      } catch { }
     }
     return false;
   };
@@ -1263,13 +1219,13 @@ function getMemoryFiles() {
       const stat = fs.statSync(memoryMdPath);
       files.push({ name: 'MEMORY.md', modified: stat.mtimeMs, size: stat.size });
     }
-  } catch {}
+  } catch { }
   try {
     if (fs.existsSync(heartbeatPath)) {
       const stat = fs.statSync(heartbeatPath);
       files.push({ name: 'HEARTBEAT.md', modified: stat.mtimeMs, size: stat.size });
     }
-  } catch {}
+  } catch { }
   try {
     if (fs.existsSync(memoryDir)) {
       const entries = fs.readdirSync(memoryDir).filter(f => f.endsWith('.md')).sort().reverse();
@@ -1277,10 +1233,10 @@ function getMemoryFiles() {
         try {
           const stat = fs.statSync(path.join(memoryDir, e));
           files.push({ name: 'memory/' + e, modified: stat.mtimeMs, size: stat.size });
-        } catch {}
+        } catch { }
       });
     }
-  } catch {}
+  } catch { }
   return files;
 }
 
@@ -1293,7 +1249,7 @@ function getKeyFiles() {
         const stat = fs.statSync(fpath);
         files.push({ name: fname, modified: stat.mtimeMs, size: stat.size, editable: true });
       }
-    } catch {}
+    } catch { }
   }
   try {
     if (fs.existsSync(skillsDir)) {
@@ -1311,17 +1267,17 @@ function getKeyFiles() {
           } else if (e.endsWith('.md')) {
             files.push({ name: 'skills/' + e, modified: stat.mtimeMs, size: stat.size, editable: true });
           }
-        } catch {}
+        } catch { }
       }
     }
-  } catch {}
+  } catch { }
   for (const cf of configFiles) {
     try {
       if (fs.existsSync(cf.path)) {
         const stat = fs.statSync(cf.path);
         files.push({ name: cf.name, modified: stat.mtimeMs, size: stat.size, editable: !READ_ONLY_FILES.has(cf.name) });
       }
-    } catch {}
+    } catch { }
   }
   return files;
 }
@@ -1345,7 +1301,7 @@ function buildKeyFilesAllowed() {
         }
       }
     }
-  } catch {}
+  } catch { }
   for (const cf of configFiles) {
     if (fs.existsSync(cf.path)) map[cf.name] = cf.path;
   }
@@ -1353,35 +1309,50 @@ function buildKeyFilesAllowed() {
 }
 
 function getTodayTokens() {
+  syncAllCaches();
   try {
-    const files = fs.readdirSync(sessDir).filter(f => isSessionFile(f));
+    const r = globalUsageCache;
+    if (!r) throw new Error();
     const now = new Date();
-    const todayStr = now.toISOString().substring(0, 10);
-    const perModel = {};
+    const todayBeginTime = new Date(now.getFullYear(), now.getMonth(), now.getDate()).getTime();
+
+    // We already have today's messages in recentMessages since 5 hours covers most or we can just filter recentMessages up to 24h
+    // It's safer to just iterate recent messages or keep it lightweight
     let totalInput = 0, totalOutput = 0;
+    const perModel = {};
+
+    // recentMessages holds last 5 hours. To reliably get "today", let's quickly read only files modified today
+    // This is still file reading but strictly limited to files modified *today*, NOT the whole history
+    const files = fs.readdirSync(sessDir).filter(f => isSessionFile(f));
+    const todayStr = now.toISOString().substring(0, 10);
 
     for (const file of files) {
-      const lines = fs.readFileSync(path.join(sessDir, file), 'utf8').split('\n');
-      for (const line of lines) {
-        if (!line.trim()) continue;
-        try {
-          const d = JSON.parse(line);
-          if (d.type !== 'message') continue;
-          const ts = d.timestamp || '';
-          if (!ts.startsWith(todayStr)) continue;
-          const msg = d.message;
-          if (!msg || !msg.usage) continue;
-          const model = (msg.model || 'unknown').split('/').pop();
-          if (model === 'delivery-mirror') continue;
-          const inTok = (msg.usage.input || 0) + (msg.usage.cacheRead || 0) + (msg.usage.cacheWrite || 0);
-          const outTok = msg.usage.output || 0;
-          if (!perModel[model]) perModel[model] = { input: 0, output: 0 };
-          perModel[model].input += inTok;
-          perModel[model].output += outTok;
-          totalInput += inTok;
-          totalOutput += outTok;
-        } catch {}
-      }
+      try {
+        const stats = fs.statSync(path.join(sessDir, file));
+        if (stats.mtimeMs < todayBeginTime) continue; // Skip files unedited today
+
+        const lines = fs.readFileSync(path.join(sessDir, file), 'utf8').split('\n');
+        for (const line of lines) {
+          if (!line.trim()) continue;
+          try {
+            const d = JSON.parse(line);
+            if (d.type !== 'message') continue;
+            const ts = d.timestamp || '';
+            if (!ts.startsWith(todayStr)) continue;
+            const msg = d.message;
+            if (!msg || !msg.usage) continue;
+            const model = (msg.model || 'unknown').split('/').pop();
+            if (model === 'delivery-mirror') continue;
+            const inTok = (msg.usage.input || 0) + (msg.usage.cacheRead || 0) + (msg.usage.cacheWrite || 0);
+            const outTok = msg.usage.output || 0;
+            if (!perModel[model]) perModel[model] = { input: 0, output: 0 };
+            perModel[model].input += inTok;
+            perModel[model].output += outTok;
+            totalInput += inTok;
+            totalOutput += outTok;
+          } catch { }
+        }
+      } catch { }
     }
     return { totalInput, totalOutput, perModel };
   } catch { return { totalInput: 0, totalOutput: 0, perModel: {} }; }
@@ -1413,7 +1384,7 @@ function getAvgResponseTime() {
             if (diff > 0 && diff < 600000) diffs.push(diff);
             lastUserTs = null;
           }
-        } catch {}
+        } catch { }
       }
     }
     if (diffs.length === 0) return 0;
@@ -1424,12 +1395,12 @@ function getAvgResponseTime() {
 function trackDiskHistory(diskPercent) {
   const histFile = path.join(__dirname, 'disk-history.json');
   let history = [];
-  try { history = JSON.parse(fs.readFileSync(histFile, 'utf8')); } catch {}
+  try { history = JSON.parse(fs.readFileSync(histFile, 'utf8')); } catch { }
   const now = Date.now();
   if (history.length > 0 && now - history[history.length - 1].t < 1800000) return history;
   history.push({ t: now, v: diskPercent });
   if (history.length > 48) history = history.slice(-48);
-  try { fs.writeFileSync(histFile, JSON.stringify(history)); } catch {}
+  try { fs.writeFileSync(histFile, JSON.stringify(history)); } catch { }
   return history;
 }
 
@@ -1438,7 +1409,7 @@ try {
   if (fs.existsSync(healthHistoryFile)) {
     healthHistory = JSON.parse(fs.readFileSync(healthHistoryFile, 'utf8'));
   }
-} catch {}
+} catch { }
 
 function saveHealthSnapshot() {
   try {
@@ -1747,7 +1718,7 @@ const server = http.createServer((req, res) => {
   if (req.url === '/api/auth/setup-mfa' && req.method === 'POST') {
     if (!requireAuth(req, res)) return;
     setSameSiteCORS(req, res);
-    
+
     try {
       const secret = base32Encode(crypto.randomBytes(20));
       const otpauth_uri = `otpauth://totp/OpenClaw:Dashboard?secret=${secret}&issuer=OpenClaw&algorithm=SHA1&digits=6&period=30`;
@@ -1764,7 +1735,7 @@ const server = http.createServer((req, res) => {
   if (req.url === '/api/auth/confirm-mfa' && req.method === 'POST') {
     if (!requireAuth(req, res)) return;
     setSameSiteCORS(req, res);
-    
+
     let body = '';
     req.on('data', chunk => { body += chunk; if (body.length > 1024) req.destroy(); });
     req.on('end', () => {
@@ -1772,20 +1743,20 @@ const server = http.createServer((req, res) => {
         const { totpCode } = JSON.parse(body);
         const ip = getClientIP(req);
         const pending = pendingMfaSecrets.get(ip);
-        
+
         if (!pending || Date.now() - pending.createdAt > 10 * 60 * 1000) {
           pendingMfaSecrets.delete(ip);
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'MFA setup expired. Please try again.' }));
           return;
         }
-        
+
         if (!totpCode || !verifyTOTP(pending.secret, totpCode)) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Invalid TOTP code. Please try again.' }));
           return;
         }
-        
+
         const creds = getCredentials();
         if (creds) {
           creds.mfaSecret = pending.secret;
@@ -1806,34 +1777,34 @@ const server = http.createServer((req, res) => {
   if (req.url === '/api/auth/disable-mfa' && req.method === 'POST') {
     if (!requireAuth(req, res)) return;
     setSameSiteCORS(req, res);
-    
+
     let body = '';
     req.on('data', chunk => { body += chunk; if (body.length > 1024) req.destroy(); });
     req.on('end', () => {
       try {
         const { totpCode } = JSON.parse(body);
-        
+
         const creds = getCredentials();
         const mfaSecret = creds?.mfaSecret || MFA_SECRET;
-        
+
         if (!mfaSecret) {
           res.writeHead(400, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'MFA is not enabled' }));
           return;
         }
-        
+
         if (!totpCode || !verifyTOTP(mfaSecret, totpCode)) {
           auditLog('mfa_disable_failed', getClientIP(req));
           res.writeHead(401, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ error: 'Invalid TOTP code' }));
           return;
         }
-        
+
         if (creds) {
           delete creds.mfaSecret;
           saveCredentials(creds);
         }
-        
+
         auditLog('mfa_disabled', getClientIP(req));
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true }));
@@ -1935,10 +1906,10 @@ const server = http.createServer((req, res) => {
                 }
               }
               if (text) messages.push({ role: msg.role || 'unknown', content: text.substring(0, 300), timestamp: d.timestamp || '' });
-            } catch {}
+            } catch { }
           }
         }
-      } catch {}
+      } catch { }
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(messages));
       return;
@@ -1976,7 +1947,7 @@ const server = http.createServer((req, res) => {
     if (req.url === '/api/claude-usage-scrape' && req.method === 'POST') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       if (fs.existsSync(scrapeScript)) {
-        exec(`bash ${scrapeScript}`, { timeout: 60000 }, (err) => {});
+        exec(`bash ${scrapeScript}`, { timeout: 60000 }, (err) => { });
         res.end(JSON.stringify({ status: 'started' }));
       } else {
         res.end(JSON.stringify({ status: 'error', message: 'Scrape script not found' }));
@@ -1996,7 +1967,7 @@ const server = http.createServer((req, res) => {
     if (req.url === '/api/gemini-usage-scrape' && req.method === 'POST') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       if (fs.existsSync(geminiScrapeScript)) {
-        exec(`bash ${geminiScrapeScript}`, { timeout: 60000 }, (err) => {});
+        exec(`bash ${geminiScrapeScript}`, { timeout: 60000 }, (err) => { });
         res.end(JSON.stringify({ status: 'started' }));
       } else {
         res.end(JSON.stringify({ status: 'error', message: 'Gemini scrape script not found' }));
@@ -2045,7 +2016,7 @@ const server = http.createServer((req, res) => {
         const units = serviceUnitCandidates[service] || [service];
         const scopes = ['system', 'user'];
         const sourceLogs = [];
-        
+
         // Collect logs from all scopes and units
         for (const scope of scopes) {
           for (const unit of units) {
@@ -2064,10 +2035,10 @@ const server = http.createServer((req, res) => {
                   lineCount: linesArray.length
                 });
               }
-            } catch {}
+            } catch { }
           }
         }
-        
+
         let logs = '';
         if (sourceLogs.length === 0) {
           logs = `No logs available for "${service}". Tried units: ${units.join(', ')} in system + user journal.`;
@@ -2077,7 +2048,7 @@ const server = http.createServer((req, res) => {
         } else {
           // Multiple sources - sort by recency (oldest first, newest last)
           sourceLogs.sort((a, b) => a.lastTimestamp.localeCompare(b.lastTimestamp));
-          
+
           // Show each source as separate block
           logs = `${sourceLogs.length} log sources found (chronological by latest entry):\n`;
           for (const entry of sourceLogs) {
@@ -2106,7 +2077,7 @@ const server = http.createServer((req, res) => {
             exec('systemctl --user restart openclaw', (err2) => {
               if (err2) {
                 // Also try openclaw-gateway (common user service name)
-                exec('systemctl --user restart openclaw-gateway', (err3) => {});
+                exec('systemctl --user restart openclaw-gateway', (err3) => { });
               }
             });
           }
@@ -2123,7 +2094,7 @@ const server = http.createServer((req, res) => {
       try {
         auditLog('action_restart_dashboard', ip);
         setTimeout(() => {
-          exec('systemctl restart agent-dashboard', (err) => {});
+          exec('systemctl restart agent-dashboard', (err) => { });
         }, 2000);
         res.writeHead(200, { 'Content-Type': 'application/json' });
         res.end(JSON.stringify({ success: true, message: 'Restarting in 2 seconds...' }));
@@ -2221,7 +2192,7 @@ const server = http.createServer((req, res) => {
           if (serveStatus && !serveStatus.includes('No serve config')) {
             routes = serveStatus.split('\n').filter(l => l.includes('http')).map(l => l.trim());
           }
-        } catch {}
+        } catch { }
         res.end(JSON.stringify({
           hostname: self.HostName || 'unknown',
           ip: self.TailscaleIPs?.[0] || 'unknown',
@@ -2269,7 +2240,7 @@ const server = http.createServer((req, res) => {
                 const day = d.timestamp.substring(0, 10);
                 activeDays.add(day);
               }
-            } catch {}
+            } catch { }
           }
         }
         const result = {
@@ -2307,7 +2278,7 @@ const server = http.createServer((req, res) => {
         else if (fname === 'HEARTBEAT.md') fpath = heartbeatPath;
         else if (fname.startsWith('memory/') && !fname.includes('..')) fpath = path.join(WORKSPACE_DIR, fname);
         else throw new Error('Invalid path');
-        
+
         if (fs.existsSync(fpath)) {
           const content = fs.readFileSync(fpath, 'utf8');
           res.writeHead(200, { 'Content-Type': 'text/plain' });
@@ -2389,7 +2360,7 @@ const server = http.createServer((req, res) => {
             if (fs.existsSync(fpath)) {
               fs.copyFileSync(fpath, fpath + '.bak');
             }
-          } catch {}
+          } catch { }
           const tmp = fpath + '.tmp.' + Date.now();
           fs.writeFileSync(tmp, content, 'utf8');
           fs.renameSync(tmp, fpath);
@@ -2408,7 +2379,7 @@ const server = http.createServer((req, res) => {
         const action = parts[parts.length - 1];
         const id = parts[parts.length - 2].replace(/[^a-zA-Z0-9\-_]/g, '');
         if (!id) { res.writeHead(400); res.end('Invalid id'); return; }
-        
+
         if (action === 'toggle') {
           const { execSync } = require('child_process');
           if (!fs.existsSync(cronFile)) throw new Error('No cron file');
@@ -2421,7 +2392,7 @@ const server = http.createServer((req, res) => {
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ success: true, enabled: job.enabled }));
         } else if (action === 'run') {
-          exec(`openclaw cron run ${id}`, { timeout: 60000 }, (err) => {});
+          exec(`openclaw cron run ${id}`, { timeout: 60000 }, (err) => { });
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify({ success: true }));
         } else {
@@ -2440,12 +2411,12 @@ const server = http.createServer((req, res) => {
         'Cache-Control': 'no-cache',
         'Connection': 'keep-alive'
       });
-      
+
       liveClients.push(res);
       startLiveWatcher();
-      
+
       res.write('data: {"status":"connected"}\n\n');
-      
+
       try {
         const cutoff = Date.now() - 3600000;
         const files = fs.readdirSync(sessDir).filter(f => {
@@ -2463,23 +2434,23 @@ const server = http.createServer((req, res) => {
               data._sessionKey = sessionKey;
               const event = formatLiveEvent(data);
               if (event) recentEvents.push(event);
-            } catch {}
+            } catch { }
           });
         });
         recentEvents.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
         recentEvents.slice(0, 20).forEach(event => {
           res.write(`data: ${JSON.stringify(event)}\n\n`);
         });
-      } catch {}
-      
+      } catch { }
+
       req.on('close', () => {
         liveClients = liveClients.filter(client => client !== res);
         if (liveClients.length === 0) {
-          if (liveWatcher) { try { liveWatcher.close(); } catch {} liveWatcher = null; }
-          Object.keys(_fileWatchers).forEach(k => { try { _fileWatchers[k].close(); } catch {} delete _fileWatchers[k]; });
+          if (liveWatcher) { try { liveWatcher.close(); } catch { } liveWatcher = null; }
+          Object.keys(_fileWatchers).forEach(k => { try { _fileWatchers[k].close(); } catch { } delete _fileWatchers[k]; });
         }
       });
-      
+
       return;
     }
   }
