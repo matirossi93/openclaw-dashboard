@@ -9,7 +9,11 @@ const PORT = parseInt(process.env.DASHBOARD_PORT || '7000');
 const OPENCLAW_DIR = process.env.OPENCLAW_DIR || path.join(os.homedir(), '.openclaw');
 const WORKSPACE_DIR = process.env.WORKSPACE_DIR || process.env.OPENCLAW_WORKSPACE || process.cwd();
 const AGENT_ID = process.env.OPENCLAW_AGENT || 'main';
-const sessDir = path.join(OPENCLAW_DIR, 'agents', AGENT_ID, 'sessions');
+const agentsRoot = path.join(OPENCLAW_DIR, 'agents');
+function getSessDir(agentId) {
+  const safeId = String(agentId || AGENT_ID).replace(/[^a-zA-Z0-9\-_]/g, '');
+  return path.join(agentsRoot, safeId, 'sessions');
+}
 const cronFile = path.join(OPENCLAW_DIR, 'cron', 'jobs.json');
 const dataDir = path.join(WORKSPACE_DIR, 'data');
 const memoryDir = path.join(WORKSPACE_DIR, 'memory');
@@ -43,6 +47,9 @@ const DEFAULT_MODEL_PRICING = {
   'anthropic/claude-3-5-haiku-latest': { input: 0.80, output: 4.00, cacheRead: 0.08, cacheWrite: 1.00 },
   'openai/gpt-4o-mini': { input: 0.15, output: 0.60, cacheRead: 0.075, cacheWrite: 0.30 },
   'openai/gpt-4.1-mini': { input: 0.40, output: 1.60, cacheRead: 0.20, cacheWrite: 0.80 },
+  'openai/gpt-4o': { input: 2.50, output: 10.00, cacheRead: 1.25, cacheWrite: 5.00 },
+  'openai/gpt-4-turbo': { input: 10.00, output: 30.00, cacheRead: 5.00, cacheWrite: 20.00 },
+  'openai/gpt': { input: 2.50, output: 10.00, cacheRead: 1.25, cacheWrite: 5.00 }, // Fallback for codex/other gpt models
   'google/gemini-3-pro-preview': { input: 1.25, output: 10.00, cacheRead: 0.31, cacheWrite: 4.50 },
   'google/gemini-3-flash-preview': { input: 0.15, output: 0.60, cacheRead: 0.04, cacheWrite: 0.15 },
   'xai/grok-4-1-fast': { input: 0.20, output: 0.50, cacheRead: 0.05, cacheWrite: 0.20 }
@@ -73,6 +80,9 @@ function normalizeModel(provider, model) {
   if (p === 'openai') {
     if (ml.startsWith('gpt-4o-mini')) return 'gpt-4o-mini';
     if (ml.startsWith('gpt-4.1-mini')) return 'gpt-4.1-mini';
+    if (ml.startsWith('gpt-4o')) return 'gpt-4o';
+    if (ml.startsWith('gpt-4-turbo')) return 'gpt-4-turbo';
+    if (ml.includes('gpt') || ml.includes('codex')) return 'gpt'; // Broad catch for gpt/codex variants
   }
   if (p === 'google' && ml.startsWith('gemini-3-flash-preview')) return 'gemini-3-flash-preview';
   if (p === 'xai' && ml.startsWith('grok-4-1-fast')) return 'grok-4-1-fast';
@@ -455,9 +465,9 @@ function resolveName(key) {
   return key.split(':').pop().substring(0, 12);
 }
 
-function getLastMessage(sessionId) {
+function getLastMessage(agentId, sessionId) {
   try {
-    const filePath = path.join(sessDir, sessionId + '.jsonl');
+    const filePath = path.join(getSessDir(agentId), sessionId + '.jsonl');
     if (!fs.existsSync(filePath)) return '';
     const data = fs.readFileSync(filePath, 'utf8');
     const lines = data.split('\n').filter(l => l.trim());
@@ -488,14 +498,15 @@ function isSessionFile(f) { return f.endsWith('.jsonl') || f.includes('.jsonl.re
 function extractSessionId(f) { return f.replace(/\.jsonl(?:\.reset\.\d+)?$/, ''); }
 
 let sessionCostCache = {};
-let globalUsageCache = null;
-let globalCostCache = null;
-let lastCacheSync = 0;
+let globalUsageCache = {};
+let globalCostCache = {};
+let lastCacheSync = {};
 
-function syncAllCaches() {
+function syncAllCaches(agentId) {
   const now = Date.now();
-  if (now - lastCacheSync < 60000 && globalUsageCache && globalCostCache) return;
-  lastCacheSync = now;
+  if (now - (lastCacheSync[agentId] || 0) < 60000 && globalUsageCache[agentId] && globalCostCache[agentId]) return;
+  lastCacheSync[agentId] = now;
+  const sessDir = getSessDir(agentId);
 
   const perSession = {};
   const perModel5h = {};
@@ -569,21 +580,24 @@ function syncAllCaches() {
     if (scost > 0) perSession[sid] = scost;
   }
 
-  sessionCostCache = perSession;
+  sessionCostCache[agentId] = perSession;
   recentMessages.sort((a, b) => b.ts - a.ts);
 
-  globalUsageCache = { perModel5h, perModelWeek, recentMessages, perDayCost };
-  globalCostCache = { total: totalCost, perDay: perDayCost, perSession };
+  globalUsageCache[agentId] = { perModel5h, perModelWeek, recentMessages, perDayCost };
+  globalCostCache[agentId] = { total: totalCost, perDay: perDayCost, perSession };
 }
 
-function getSessionCost(sessionId) {
-  syncAllCaches();
-  return sessionCostCache[sessionId] || 0;
+function getSessionCost(agentId, sessionId) {
+  syncAllCaches(agentId);
+  return (sessionCostCache[agentId] || {})[sessionId] || 0;
 }
 
-function getSessionsJson() {
+function getSessionsJson(agentId) {
   try {
+    const sessDir = getSessDir(agentId);
     const sFile = path.join(sessDir, 'sessions.json');
+    if (!fs.existsSync(sessDir)) return [];
+    if (!fs.existsSync(sFile)) return [];
     const data = JSON.parse(fs.readFileSync(sFile, 'utf8'));
     return Object.entries(data).map(([key, s]) => ({
       key,
@@ -604,10 +618,10 @@ function getSessionsJson() {
   } catch (e) { return []; }
 }
 
-function getCostData() {
-  syncAllCaches();
+function getCostData(agentId) {
+  syncAllCaches(agentId);
   try {
-    const r = globalCostCache;
+    const r = globalCostCache[agentId];
     if (!r) throw new Error();
     const now = new Date();
     const todayKey = now.toISOString().substring(0, 10);
@@ -627,7 +641,7 @@ function getCostData() {
       perSession: (() => {
         let sidLabels = {};
         try {
-          const sData = JSON.parse(fs.readFileSync(path.join(sessDir, 'sessions.json'), 'utf8'));
+          const sData = JSON.parse(fs.readFileSync(path.join(getSessDir(agentId), 'sessions.json'), 'utf8'));
           for (const [key, val] of Object.entries(sData)) {
             if (val.sessionId) sidLabels[val.sessionId] = val.label || key.split(':').slice(2).join(':');
           }
@@ -647,10 +661,10 @@ function getCostData() {
 let costCache = null;
 let costCacheTime = 0;
 
-function getUsageWindows() {
-  syncAllCaches();
+function getUsageWindows(agentId) {
+  syncAllCaches(agentId);
   try {
-    const r = globalUsageCache;
+    const r = globalUsageCache[agentId];
     if (!r) throw new Error();
     const now = Date.now();
     const fiveHoursMs = 5 * 3600000;
@@ -747,8 +761,9 @@ function getUsageWindows() {
   }
 }
 
-function getRateLimitEvents() {
+function getRateLimitEvents(agentId) {
   try {
+    const sessDir = getSessDir(agentId);
     const files = fs.readdirSync(sessDir).filter(f => isSessionFile(f));
     const events = [];
     const now = Date.now();
@@ -939,46 +954,83 @@ function getSystemStats() {
 }
 
 let liveClients = [];
-let liveWatcher = null;
-const _fileWatchers = {};
-const _fileSizes = {};
+let liveWatcher = {};
+let _fileWatchers = {};
+let _fileSizes = {};
 
-function watchSessionFile(file) {
+// Fallback polling for Windows where fs.watch is unreliable
+let winWatchInterval = {};
+
+function watchSessionFile(agentId, file) {
+  const sessDir = getSessDir(agentId);
   const filePath = path.join(sessDir, file);
   const sessionKey = file.replace('.jsonl', '');
-  if (_fileWatchers[file]) return;
+  const watchKey = `${agentId}_${file}`;
+  if (_fileWatchers[watchKey]) return;
   try {
-    _fileSizes[file] = fs.statSync(filePath).size;
-  } catch { _fileSizes[file] = 0; }
+    _fileSizes[watchKey] = fs.statSync(filePath).size;
+  } catch { _fileSizes[watchKey] = 0; }
+
+  const processChange = () => {
+    try {
+      if (!fs.existsSync(filePath)) return;
+      const stats = fs.statSync(filePath);
+      if (stats.size <= (_fileSizes[watchKey] || 0)) return;
+      const fd = fs.openSync(filePath, 'r');
+      const buffer = Buffer.allocUnsafe(stats.size - (_fileSizes[watchKey] || 0));
+      fs.readSync(fd, buffer, 0, buffer.length, _fileSizes[watchKey] || 0);
+      fs.closeSync(fd);
+      _fileSizes[watchKey] = stats.size;
+      buffer.toString('utf8').split('\n').filter(l => l.trim()).forEach(line => {
+        try { const data = JSON.parse(line); data._sessionKey = sessionKey; broadcastLiveEvent(data); } catch { }
+      });
+    } catch { }
+  };
 
   try {
-    _fileWatchers[file] = fs.watch(filePath, (eventType) => {
-      if (eventType !== 'change') return;
-      try {
-        const stats = fs.statSync(filePath);
-        if (stats.size <= (_fileSizes[file] || 0)) return;
-        const fd = fs.openSync(filePath, 'r');
-        const buffer = Buffer.allocUnsafe(stats.size - (_fileSizes[file] || 0));
-        fs.readSync(fd, buffer, 0, buffer.length, _fileSizes[file] || 0);
-        fs.closeSync(fd);
-        _fileSizes[file] = stats.size;
-        buffer.toString('utf8').split('\n').filter(l => l.trim()).forEach(line => {
-          try { const data = JSON.parse(line); data._sessionKey = sessionKey; broadcastLiveEvent(data); } catch { }
-        });
-      } catch { }
-    });
+    _fileWatchers[watchKey] = {
+      isWinPoller: os.platform() === 'win32',
+      check: processChange,
+      close: () => {
+        if (_fileWatchers[watchKey].watcher) _fileWatchers[watchKey].watcher.close();
+      }
+    };
+    if (os.platform() !== 'win32') {
+      _fileWatchers[watchKey].watcher = fs.watch(filePath, (eventType) => {
+        if (eventType === 'change') processChange();
+      });
+    }
   } catch { }
 }
 
-function startLiveWatcher() {
-  if (liveWatcher) return;
+function startLiveWatcher(agentId) {
+  if (liveWatcher[agentId] || winWatchInterval[agentId]) return;
+  const sessDir = getSessDir(agentId);
   try {
-    fs.readdirSync(sessDir).filter(f => isSessionFile(f)).forEach(watchSessionFile);
-    liveWatcher = fs.watch(sessDir, (eventType, filename) => {
-      if (filename && isSessionFile(filename) && !_fileWatchers[filename]) {
-        try { if (fs.existsSync(path.join(sessDir, filename))) watchSessionFile(filename); } catch { }
-      }
-    });
+    if (!fs.existsSync(sessDir)) return;
+    fs.readdirSync(sessDir).filter(f => isSessionFile(f)).forEach(f => watchSessionFile(agentId, f));
+
+    if (os.platform() === 'win32') {
+      winWatchInterval[agentId] = setInterval(() => {
+        try {
+          if (!fs.existsSync(sessDir)) return;
+          const files = fs.readdirSync(sessDir).filter(f => isSessionFile(f));
+          files.forEach(f => {
+            if (!_fileWatchers[`${agentId}_${f}`]) watchSessionFile(agentId, f);
+          });
+          files.forEach(f => {
+            const fw = _fileWatchers[`${agentId}_${f}`];
+            if (fw && fw.isWinPoller) fw.check();
+          });
+        } catch { }
+      }, 1000);
+    } else {
+      liveWatcher[agentId] = fs.watch(sessDir, (eventType, filename) => {
+        if (filename && isSessionFile(filename) && !_fileWatchers[`${agentId}_${filename}`]) {
+          try { if (fs.existsSync(path.join(sessDir, filename))) watchSessionFile(agentId, filename); } catch { }
+        }
+      });
+    }
   } catch { }
 }
 
@@ -1206,6 +1258,30 @@ function getServicesStatus() {
       if (name === 'agent-dashboard') return { name, active: agentDashboardActive };
       if (name === 'tailscaled') return { name, active: tailscaledActive };
       return { name, active: openclawActive };
+    });
+  }
+
+  if (os.platform() === 'win32') {
+    const isProcessRunning = (imageName) => {
+      try {
+        const out = execSync(`tasklist /FI "IMAGENAME eq ${imageName}" /NH`, { encoding: 'utf8', timeout: 3000 });
+        return out.toLowerCase().includes(imageName.toLowerCase());
+      } catch { return false; }
+    };
+
+    const isNodeScriptRunning = (scriptName) => {
+      try {
+        // Find node processes running the specific script
+        const out = execSync(`powershell -Command "Get-CimInstance Win32_Process | Where-Object { $_.CommandLine -match '${scriptName}' } | Select-Object -ExpandProperty ProcessId"`, { encoding: 'utf8', timeout: 3000 });
+        return out.trim().length > 0;
+      } catch { return false; }
+    };
+
+    return services.map(name => {
+      if (name === 'openclaw') return { name, active: isProcessRunning('openclaw.exe') || isNodeScriptRunning('mcp-server') };
+      if (name === 'agent-dashboard') return { name, active: true }; // If we are replying to this API request, dashboard is running
+      if (name === 'tailscaled') return { name, active: isProcessRunning('tailscaled.exe') || isProcessRunning('tailscale.exe') };
+      return { name, active: false };
     });
   }
 
@@ -1816,6 +1892,22 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.url.startsWith('/public/')) {
+    try {
+      const parsedPath = req.url.split('?')[0];
+      const filePath = path.join(__dirname, parsedPath);
+      const ext = path.extname(filePath);
+      const mimes = { '.css': 'text/css', '.js': 'application/javascript' };
+      const content = fs.readFileSync(filePath);
+      res.writeHead(200, { 'Content-Type': mimes[ext] || 'text/plain' });
+      res.end(content);
+    } catch (e) {
+      res.writeHead(404);
+      res.end('Not found');
+    }
+    return;
+  }
+
   if (req.url === '/' || req.url === '/index.html') {
     try {
       const html = fs.readFileSync(htmlPath, 'utf8');
@@ -1839,44 +1931,97 @@ const server = http.createServer((req, res) => {
     if (!requireAuth(req, res)) return;
     setSameSiteCORS(req, res);
 
-    if (req.url === '/api/sessions') {
-      res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(getSessionsJson()));
+    const urlObj = new URL(req.url, 'http://localhost');
+    const pathname = urlObj.pathname;
+    const agentId = urlObj.searchParams.get('agent') || AGENT_ID;
+
+    if (pathname === '/api/agents') {
+      try {
+        const agentsRoot = path.join(OPENCLAW_DIR, 'agents');
+        if (!fs.existsSync(agentsRoot)) {
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(['main']));
+          return;
+        }
+        const agents = fs.readdirSync(agentsRoot).filter(f => {
+          return fs.statSync(path.join(agentsRoot, f)).isDirectory() && f !== 'main-temp';
+        });
+        if (!agents.includes('main')) agents.unshift('main');
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(agents));
+      } catch (e) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(['main']));
+      }
       return;
     }
-    if (req.url === '/api/usage') {
+
+    if (pathname === '/api/sessions') {
+      if (req.method === 'DELETE') {
+        try {
+          const id = urlObj.searchParams.get('id');
+          if (!id) throw new Error('No session ID provided');
+          const safeId = id.replace(/[^a-zA-Z0-9\-_:.]/g, '');
+          const sessDir = getSessDir(agentId);
+          const targetFile = path.join(sessDir, safeId + '.jsonl');
+          if (fs.existsSync(targetFile)) fs.unlinkSync(targetFile);
+
+          const sFile = path.join(sessDir, 'sessions.json');
+          if (fs.existsSync(sFile)) {
+            const data = JSON.parse(fs.readFileSync(sFile, 'utf8'));
+            let changed = false;
+            for (const key of Object.keys(data)) {
+              if (key === safeId || data[key].sessionId === safeId) { delete data[key]; changed = true; }
+            }
+            if (changed) fs.writeFileSync(sFile, JSON.stringify(data, null, 2));
+          }
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true }));
+        } catch (e) {
+          res.writeHead(400, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: e.message }));
+        }
+        return;
+      }
+
+      res.writeHead(200, { 'Content-Type': 'application/json' });
+      res.end(JSON.stringify(getSessionsJson(agentId)));
+      return;
+    }
+    if (pathname === '/api/usage') {
       const now = Date.now();
       if (!usageCache || now - usageCacheTime > 10000) {
-        usageCache = getUsageWindows();
+        usageCache = getUsageWindows(agentId);
         usageCacheTime = now;
       }
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(usageCache));
       return;
     }
-    if (req.url === '/api/costs') {
+    if (pathname === '/api/costs') {
       const now = Date.now();
       if (!costCache || now - costCacheTime > 60000) {
-        costCache = getCostData();
+        costCache = getCostData(agentId);
         costCacheTime = now;
       }
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(costCache));
       return;
     }
-    if (req.url === '/api/system') {
+    if (pathname === '/api/system') {
       const stats = getSystemStats();
       if (stats.disk) stats.diskHistory = trackDiskHistory(stats.disk.percent || 0);
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(stats));
       return;
     }
-    if (req.url.startsWith('/api/session-messages?')) {
-      const params = new URL(req.url, 'http://localhost').searchParams;
+    if (pathname === '/api/session-messages') {
+      const params = urlObj.searchParams;
       const rawId = params.get('id') || '';
       const sessionId = rawId.replace(/[^a-zA-Z0-9\-_:.]/g, '');
       const messages = [];
       try {
+        const sessDir = getSessDir(agentId);
         const files = fs.readdirSync(sessDir).filter(f => isSessionFile(f));
         let targetFile = files.find(f => f.includes(sessionId));
         if (!targetFile) {
@@ -1914,37 +2059,37 @@ const server = http.createServer((req, res) => {
       res.end(JSON.stringify(messages));
       return;
     }
-    if (req.url === '/api/crons') {
+    if (pathname === '/api/crons') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(getCronJobs()));
       return;
     }
-    if (req.url === '/api/git') {
+    if (pathname === '/api/git') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(getGitActivity()));
       return;
     }
-    if (req.url === '/api/services') {
+    if (pathname === '/api/services') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(getServicesStatus()));
       return;
     }
-    if (req.url === '/api/memory') {
+    if (pathname === '/api/memory') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify(getMemoryFiles()));
       return;
     }
-    if (req.url === '/api/tokens-today') {
+    if (pathname === '/api/tokens-today') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify(getTodayTokens()));
+      res.end(JSON.stringify(getTodayTokens(agentId)));
       return;
     }
-    if (req.url === '/api/config') {
+    if (pathname === '/api/config') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       res.end(JSON.stringify({ name: 'OpenClaw Dashboard', version: '1.0.0' }));
       return;
     }
-    if (req.url === '/api/claude-usage-scrape' && req.method === 'POST') {
+    if (pathname === '/api/claude-usage-scrape' && req.method === 'POST') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       if (fs.existsSync(scrapeScript)) {
         exec(`bash ${scrapeScript}`, { timeout: 60000 }, (err) => { });
@@ -1954,7 +2099,7 @@ const server = http.createServer((req, res) => {
       }
       return;
     }
-    if (req.url === '/api/claude-usage') {
+    if (pathname === '/api/claude-usage') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       try {
         const data = JSON.parse(fs.readFileSync(claudeUsageFile, 'utf8'));
@@ -1964,7 +2109,7 @@ const server = http.createServer((req, res) => {
       }
       return;
     }
-    if (req.url === '/api/gemini-usage-scrape' && req.method === 'POST') {
+    if (pathname === '/api/gemini-usage-scrape' && req.method === 'POST') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       if (fs.existsSync(geminiScrapeScript)) {
         exec(`bash ${geminiScrapeScript}`, { timeout: 60000 }, (err) => { });
@@ -1974,7 +2119,7 @@ const server = http.createServer((req, res) => {
       }
       return;
     }
-    if (req.url === '/api/gemini-usage') {
+    if (pathname === '/api/gemini-usage') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
       try {
         const data = JSON.parse(fs.readFileSync(geminiUsageFile, 'utf8'));
@@ -1984,9 +2129,9 @@ const server = http.createServer((req, res) => {
       }
       return;
     }
-    if (req.url === '/api/response-time') {
+    if (pathname === '/api/response-time') {
       res.writeHead(200, { 'Content-Type': 'application/json' });
-      res.end(JSON.stringify({ avgSeconds: getAvgResponseTime() }));
+      res.end(JSON.stringify({ avgSeconds: getAvgResponseTime(agentId) }));
       return;
     }
     if (req.url.startsWith('/api/logs?')) {
@@ -2405,7 +2550,7 @@ const server = http.createServer((req, res) => {
       }
       return;
     }
-    if (req.url === '/api/live' || req.url.startsWith('/api/live?')) {
+    if (pathname === '/api/live') {
       res.writeHead(200, {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
@@ -2413,16 +2558,17 @@ const server = http.createServer((req, res) => {
       });
 
       liveClients.push(res);
-      startLiveWatcher();
+      startLiveWatcher(agentId);
 
       res.write('data: {"status":"connected"}\n\n');
 
       try {
+        const sessDir = getSessDir(agentId);
         const cutoff = Date.now() - 3600000;
-        const files = fs.readdirSync(sessDir).filter(f => {
+        const files = fs.existsSync(sessDir) ? fs.readdirSync(sessDir).filter(f => {
           if (!f.endsWith('.jsonl')) return false;
           try { return fs.statSync(path.join(sessDir, f)).mtimeMs > cutoff; } catch { return false; }
-        });
+        }) : [];
         const recentEvents = [];
         files.forEach(file => {
           const sessionKey = file.replace('.jsonl', '');
@@ -2446,7 +2592,8 @@ const server = http.createServer((req, res) => {
       req.on('close', () => {
         liveClients = liveClients.filter(client => client !== res);
         if (liveClients.length === 0) {
-          if (liveWatcher) { try { liveWatcher.close(); } catch { } liveWatcher = null; }
+          Object.keys(liveWatcher).forEach(k => { try { liveWatcher[k].close(); } catch { } delete liveWatcher[k]; });
+          Object.keys(winWatchInterval).forEach(k => { clearInterval(winWatchInterval[k]); delete winWatchInterval[k]; });
           Object.keys(_fileWatchers).forEach(k => { try { _fileWatchers[k].close(); } catch { } delete _fileWatchers[k]; });
         }
       });
