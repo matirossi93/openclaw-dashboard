@@ -36,7 +36,7 @@ A beautiful, secure, real-time monitoring dashboard for OpenClaw agents. Track s
 - 🎯 **Activity Heatmap** - Visualize peak usage hours over the last 30 days
 - 🔥 **Streak Tracking** - Monitor daily activity streaks
 - 🔍 **Session Search & Filtering** - Filter by status, model, date range with live search
-- 🎨 **Dark Theme** - Beautiful glassmorphic UI with smooth animations
+- 🎨 **Dark/Light Theme** - Toggle between dark and light modes with persistent preference
 - ⌨️ **Keyboard Shortcuts** - Navigate quickly with hotkeys (1-7, Space, /, Esc, ?)
 - 📱 **Mobile Responsive** - Works on phones and tablets
 - 🔔 **Browser Notifications** - Get alerted when usage limits are approaching
@@ -48,9 +48,13 @@ A beautiful, secure, real-time monitoring dashboard for OpenClaw agents. Track s
 - 📊 **Per-Model Selector** - Choose which model/window to display (Opus, Sonnet, Pro, Flash, etc.)
 - 🔄 **Auto-Refresh** - Live data updates every 5 seconds
 - 🌟 **Lifetime Stats** - Total tokens, messages, cost since first session
-- 📈 **Health History** - 24-hour CPU & RAM sparklines
+- 📈 **Health History** - 24-hour CPU, RAM, temperature, and disk usage sparklines
 - 🎯 **Quick Actions** - One-click system maintenance (updates, cleanup, restarts)
 - 🍎 **macOS Compatible** - Full support for macOS system stats, services, and memory reporting
+- 🛡️ **System Security Dashboard** - UFW rules, open ports, fail2ban, SSH logs, security audit (requires re-authentication)
+- ⚙️ **Config Editor** - Edit OpenClaw configuration with JSON validation, auto-backup, and gateway restart (requires re-authentication)
+- 🐳 **Docker Management** - View containers, images, system usage; start/stop/restart containers; prune unused resources
+- 🔔 **Notification Center** - Audit log event feed with unread badge counter (login, config changes, security events)
 - 🔐 **Username/Password Auth** - Secure registration with PBKDF2 password hashing
 - 🔑 **TOTP MFA** - Optional two-factor authentication (Google Authenticator compatible)
 - 💾 **Remember Me** - Session-only or 3-hour persistent login
@@ -487,6 +491,15 @@ All other endpoints require authentication:
 - `POST /api/gemini-usage-scrape` — Trigger Gemini usage scrape
 - `GET /api/gemini-usage` — Get last scraped Gemini usage
 - `GET /api/live` — Server-Sent Events stream of real-time messages
+- `GET /api/notifications?limit=<N>` — Audit log events for notification center
+- `POST /api/reauth` — Re-authenticate for sensitive pages (Security, Config)
+- `GET /api/openclaw-config` — Read OpenClaw configuration file
+- `PUT /api/openclaw-config` — Save config with auto-backup and gateway restart
+- `GET /api/sys-security` — System security info (UFW, ports, fail2ban, SSH logs)
+- `GET /api/docker` — List Docker containers, images, and system usage
+- `POST /api/docker/action` — Docker actions (start/stop/restart container, prune)
+- `GET /api/services` — List systemd services
+- `POST /api/services/action` — Service actions (start/stop/restart, whitelisted only)
 
 For detailed request/response examples, see the previous version of this README or explore the API in the browser's Network tab.
 
@@ -498,7 +511,7 @@ The dashboard stores data in your workspace directory:
 |------|---------|
 | `data/credentials.json` | Username + hashed password + MFA secret |
 | `data/audit.log` | Security audit trail (auto-rotates at 10MB) |
-| `data/health-history.json` | CPU/RAM history for sparklines |
+| `data/health-history.json` | CPU/RAM/Temp/Disk history for sparklines |
 | `data/claude-usage.json` | Last scraped Claude usage data |
 | `data/gemini-usage.json` | Last scraped Gemini usage data |
 
@@ -543,6 +556,8 @@ The dashboard works best when these files exist:
 | `5` | Switch to Memory |
 | `6` | Switch to Files |
 | `7` | Switch to Live Feed |
+| `8` | Switch to Logs |
+| `9` | Switch to Security |
 | `Space` | Pause/Resume Feed (when on Live Feed page) |
 | `/` | Focus search box |
 | `Esc` | Close modals and overlays |
