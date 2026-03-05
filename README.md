@@ -55,7 +55,7 @@ A beautiful, secure, real-time monitoring dashboard for OpenClaw agents. Track s
 - 🔑 **TOTP MFA** - Optional two-factor authentication (Google Authenticator compatible)
 - 💾 **Remember Me** - Session-only or 3-hour persistent login
 - 🛡️ **Security Hardened** - HSTS, CSP, rate limiting, timing-safe comparisons, audit logging
-- 📦 **No External Dependencies** - Pure Node.js, no database required
+- 📦 **Minimal Dependencies** - Pure Node.js, no database or npm packages required. Optional: `jq` (Docker page), `tmux` + `python3` (Claude CLI usage scraper), `docker` (Docker management)
 
 ## 🚀 Quick Start
 
