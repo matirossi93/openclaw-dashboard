@@ -2600,6 +2600,70 @@ const server = http.createServer((req, res) => {
 
       return;
     }
+
+    // ── Amira bot endpoints ─────────────────────────────────────────────────
+    const metricsJsonPath = path.join(WORKSPACE_DIR, 'workspace', 'dashboard', 'metrics.json');
+
+    if (pathname === '/api/metrics-summary') {
+      try {
+        const data = JSON.parse(fs.readFileSync(metricsJsonPath, 'utf8'));
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(data));
+      } catch (e) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'No metrics data available' }));
+      }
+      return;
+    }
+
+    if (pathname === '/api/amira') {
+      try {
+        const data = JSON.parse(fs.readFileSync(metricsJsonPath, 'utf8'));
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ generated_at: data.generated_at, ...data.amira }));
+      } catch (e) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ error: 'No data' }));
+      }
+      return;
+    }
+
+    if (pathname === '/api/crons/amira') {
+      try {
+        const data = JSON.parse(fs.readFileSync(metricsJsonPath, 'utf8'));
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify(data.amira ? data.amira.crons || [] : []));
+      } catch (e) {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify([]));
+      }
+      return;
+    }
+
+    if (pathname === '/api/crons/amira/toggle' && req.method === 'POST') {
+      let body = '';
+      req.on('data', chunk => { body += chunk; if (body.length > 2048) req.destroy(); });
+      req.on('end', () => {
+        try {
+          const { id, enabled } = JSON.parse(body);
+          if (!id) throw new Error('id required');
+          const { execSync } = require('child_process');
+          const amiraKeyPath = path.join(WORKSPACE_DIR, 'amira_key');
+          const enabledVal = enabled ? 'True' : 'False';
+          const safeId = String(id).replace(/[^a-zA-Z0-9\-]/g, '');
+          const remoteCmd = `python3 -c "import json; f=open('/home/ubuntu/.openclaw/cron/jobs.json'); d=json.load(f); f.close(); [j.update({'enabled': ${enabledVal}}) for j in d['jobs'] if j['id']=='${safeId}']; open('/home/ubuntu/.openclaw/cron/jobs.json','w').write(json.dumps(d, indent=2))"`;
+          execSync(`ssh -i "${amiraKeyPath}" -o StrictHostKeyChecking=no ubuntu@165.1.123.161 ${JSON.stringify(remoteCmd)}`, { timeout: 15000 });
+          auditLog('amira_cron_toggle', ip, { cronId: id, enabled });
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ success: true, enabled }));
+        } catch (e) {
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: e.message }));
+        }
+      });
+      return;
+    }
+    // ── End Amira endpoints ──────────────────────────────────────────────────
   }
 
   try {

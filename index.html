@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Agent Dashboard</title>
+  <title>Panel de Agentes</title>
   <link rel="icon"
     href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%236366f1;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%238b5cf6;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Ccircle cx='50' cy='50' r='45' fill='url(%23grad)'/%3E%3Ccircle cx='35' cy='40' r='8' fill='%23fff'/%3E%3Ccircle cx='65' cy='40' r='8' fill='%23fff'/%3E%3Cpath d='M 30 65 Q 50 75 70 65' stroke='%23fff' stroke-width='4' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -25,8 +25,8 @@
         <div style="font-size:48px;margin-bottom:16px;">🔐</div>
         <h1
           style="font-size:24px;font-weight:700;margin-bottom:8px;background:linear-gradient(135deg, var(--text-primary), var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;"
-          id="authTitle">Dashboard Login</h1>
-        <p style="color:var(--text-secondary);font-size:14px;" id="authSubtitle">Enter your credentials</p>
+          id="authTitle">Iniciar Sesión</h1>
+        <p style="color:var(--text-secondary);font-size:14px;" id="authSubtitle">Ingresá tus credenciales</p>
       </div>
 
       <form id="registerForm" style="display:none;" onsubmit="return handleRegister(event)">
@@ -49,15 +49,14 @@
           <div style="height:6px;background:var(--bg-primary);border-radius:3px;overflow:hidden;">
             <div id="passwordStrengthBar" style="height:100%;width:0%;transition:all 0.3s;border-radius:3px;"></div>
           </div>
-          <div id="passwordStrengthText" style="font-size:11px;color:var(--text-muted);margin-top:4px;">Password must be
-            8+ chars with at least 1 letter and 1 number</div>
+          <div id="passwordStrengthText" style="font-size:11px;color:var(--text-muted);margin-top:4px;">La contraseña debe tener 8+ caracteres con al menos 1 letra y 1 número</div>
         </div>
         <div id="registerError"
           style="display:none;color:var(--red);font-size:13px;margin-bottom:16px;padding:12px;background:rgba(239,68,68,0.1);border-radius:6px;border:1px solid rgba(239,68,68,0.3);">
         </div>
         <button type="submit" id="registerBtn"
-          style="width:100%;padding:14px;background:linear-gradient(135deg, var(--accent), var(--purple));color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.2s;">Create
-          Account</button>
+          style="width:100%;padding:14px;background:linear-gradient(135deg, var(--accent), var(--purple));color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.2s;">Crear
+          cuenta</button>
       </form>
 
       <form id="loginForm" style="display:none;" onsubmit="return handleLogin(event)">
@@ -78,35 +77,35 @@
         </div>
         <div style="margin-bottom:16px;display:flex;align-items:center;gap:8px;">
           <input type="checkbox" id="rememberMeCheckbox" style="width:16px;height:16px;cursor:pointer;">
-          <label for="rememberMeCheckbox" style="color:var(--text-secondary);font-size:14px;cursor:pointer;">Remember me
-            (3 hours)</label>
+          <label for="rememberMeCheckbox" style="color:var(--text-secondary);font-size:14px;cursor:pointer;">Recordarme
+            (3 horas)</label>
         </div>
         <div id="loginError"
           style="display:none;color:var(--red);font-size:13px;margin-bottom:16px;padding:12px;background:rgba(239,68,68,0.1);border-radius:6px;border:1px solid rgba(239,68,68,0.3);">
         </div>
         <button type="submit" id="loginBtn"
-          style="width:100%;padding:14px;background:linear-gradient(135deg, var(--accent), var(--purple));color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.2s;">Login</button>
+          style="width:100%;padding:14px;background:linear-gradient(135deg, var(--accent), var(--purple));color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.2s;">Entrar</button>
         <div style="text-align:center;margin-top:16px;">
           <a href="#" onclick="showRecoveryForm();return false;"
-            style="color:var(--accent);font-size:13px;text-decoration:none;">Forgot password?</a>
+            style="color:var(--accent);font-size:13px;text-decoration:none;">¿Olvidaste tu contraseña?</a>
         </div>
       </form>
 
       <form id="recoveryForm" style="display:none;" onsubmit="return handleRecovery(event)">
         <div style="margin-bottom:16px;">
-          <input type="text" id="recoveryToken" placeholder="Recovery Token"
+          <input type="text" id="recoveryToken" placeholder="Token de recuperación"
             style="width:100%;padding:14px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:14px;font-family:'JetBrains Mono',monospace;"
             required>
           <div style="font-size:11px;color:var(--text-muted);margin-top:4px;">Check your server console or environment
             variables</div>
         </div>
         <div style="margin-bottom:16px;">
-          <input type="password" id="recoveryNewPassword" placeholder="New Password"
+          <input type="password" id="recoveryNewPassword" placeholder="Nueva contraseña"
             style="width:100%;padding:14px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:14px;"
             required minlength="8">
         </div>
         <div style="margin-bottom:20px;">
-          <input type="password" id="recoveryNewPasswordConfirm" placeholder="Confirm New Password"
+          <input type="password" id="recoveryNewPasswordConfirm" placeholder="Confirmar nueva contraseña"
             style="width:100%;padding:14px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:14px;"
             required>
         </div>
@@ -114,8 +113,8 @@
           style="display:none;color:var(--red);font-size:13px;margin-bottom:16px;padding:12px;background:rgba(239,68,68,0.1);border-radius:6px;border:1px solid rgba(239,68,68,0.3);">
         </div>
         <button type="submit" id="recoveryBtn"
-          style="width:100%;padding:14px;background:linear-gradient(135deg, var(--accent), var(--purple));color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.2s;margin-bottom:12px;">Reset
-          Password</button>
+          style="width:100%;padding:14px;background:linear-gradient(135deg, var(--accent), var(--purple));color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.2s;margin-bottom:12px;">Restablecer
+          contraseña</button>
         <button type="button" onclick="showLoginForm()"
           style="width:100%;padding:12px;background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border);border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;">←
           Back to Login</button>
@@ -132,8 +131,18 @@
           <div class="brand">Agent</div>
         </div>
         <div style="width: 100%;">
-          <select id="agentGlobalSelector" onchange="switchAgent(this.value)"
-            style="width:100%; padding:8px; border-radius:6px; background:var(--bg-secondary); color:var(--text-primary); border:1px solid var(--border); font-size:13px; font-weight:500; cursor:pointer; outline: none;">
+          <div id="botSelector" style="display:flex;background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;overflow:hidden;padding:2px;gap:2px;">
+            <button id="botBtnClarita" onclick="switchBot('clarita')"
+              style="flex:1;padding:6px 8px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:600;background:var(--accent);color:#fff;transition:all 0.2s;">
+              🤖 Clarita
+            </button>
+            <button id="botBtnAmira" onclick="switchBot('amira')"
+              style="flex:1;padding:6px 8px;border-radius:6px;border:none;cursor:pointer;font-size:12px;font-weight:600;background:transparent;color:var(--text-muted);transition:all 0.2s;">
+              🌸 Amira
+            </button>
+          </div>
+          <!-- Keep hidden for backward-compat with app.js -->
+          <select id="agentGlobalSelector" onchange="switchAgent(this.value)" style="display:none;">
             <option value="main">main</option>
           </select>
         </div>
@@ -141,39 +150,39 @@
       <nav class="nav">
         <div class="nav-item active" data-page="overview">
           <span class="icon">📊</span>
-          <span class="nav-text">Overview</span>
+          <span class="nav-text">Resumen</span>
         </div>
-        <div class="nav-item" data-page="sessions">
+        <div class="nav-item clarita-only" data-page="sessions">
           <span class="icon">🤖</span>
-          <span class="nav-text">Sessions</span>
+          <span class="nav-text">Sesiones</span>
         </div>
         <div class="nav-item" data-page="costs">
           <span class="icon">💰</span>
-          <span class="nav-text">Costs</span>
+          <span class="nav-text">Costos</span>
         </div>
-        <div class="nav-item" data-page="limits">
+        <div class="nav-item clarita-only" data-page="limits">
           <span class="icon">📈</span>
-          <span class="nav-text">Limits</span>
+          <span class="nav-text">Límites</span>
         </div>
-        <div class="nav-item" data-page="memory">
+        <div class="nav-item clarita-only" data-page="memory">
           <span class="icon">🧠</span>
-          <span class="nav-text">Memory</span>
+          <span class="nav-text">Memoria</span>
         </div>
-        <div class="nav-item" data-page="files">
+        <div class="nav-item clarita-only" data-page="files">
           <span class="icon">📁</span>
-          <span class="nav-text">Files</span>
+          <span class="nav-text">Archivos</span>
         </div>
-        <div class="nav-item" data-page="logs">
+        <div class="nav-item clarita-only" data-page="logs">
           <span class="icon">📋</span>
           <span class="nav-text">Logs</span>
         </div>
-        <div class="nav-item" data-page="feed">
+        <div class="nav-item clarita-only" data-page="feed">
           <span class="icon">⚡</span>
-          <span class="nav-text">Live Feed</span>
+          <span class="nav-text">Feed en Vivo</span>
         </div>
         <div class="nav-item" data-page="security">
           <span class="icon">🔒</span>
-          <span class="nav-text">Security</span>
+          <span class="nav-text">Seguridad</span>
         </div>
       </nav>
       <div class="sidebar-footer">
@@ -182,11 +191,11 @@
         </div>
         <div class="nav-item" onclick="toggleTheme()" style="margin-bottom:8px;">
           <span class="icon" id="themeIcon">🌓</span>
-          <span class="nav-text">Toggle Theme</span>
+          <span class="nav-text">Cambiar Tema</span>
         </div>
         <div class="nav-item" onclick="handleLogout()" style="color:var(--red);margin-bottom:0;">
           <span class="icon">🚪</span>
-          <span class="nav-text">Logout</span>
+          <span class="nav-text">Cerrar Sesión</span>
         </div>
       </div>
     </aside>
@@ -195,23 +204,104 @@
 
       <div class="page active" id="overview">
         <div class="page-header">
-          <h1 class="page-title">Overview</h1>
-          <p class="page-subtitle">Agent activity and system performance</p>
+          <h1 class="page-title" id="overviewTitle">Resumen</h1>
+          <p class="page-subtitle" id="overviewSubtitle">Actividad del agente y rendimiento del sistema</p>
         </div>
 
+        <!-- ── Amira Overview (shown when bot=amira) ──────────────── -->
+        <div id="amiraOverviewSection" style="display:none;">
+          <div class="grid mb-24" style="grid-template-columns:repeat(4,1fr);">
+            <div class="card">
+              <div class="metric accent">
+                <div class="metric-value" id="aoTotalCost">$0.00</div>
+                <div class="metric-label">Costo total (30d)</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="metric green">
+                <div class="metric-value" id="aoTotalTokens">0</div>
+                <div class="metric-label">Tokens (30d)</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="metric">
+                <div class="metric-value" id="aoMsgsIn">0</div>
+                <div class="metric-label">Mensajes recibidos (7d)</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="metric">
+                <div class="metric-value" id="aoActiveCrons">0</div>
+                <div class="metric-label">Crons activos</div>
+              </div>
+            </div>
+          </div>
+          <div class="grid grid-2 mb-24">
+            <div class="card">
+              <h3 class="card-title">Actividad diaria — últimos 14 días</h3>
+              <div id="aoDailyChart" class="bar-chart" style="min-height:140px;"></div>
+            </div>
+            <div class="card">
+              <h3 class="card-title">Cron Jobs</h3>
+              <div id="aoCronsTable" style="overflow-x:auto;max-height:320px;overflow-y:auto;"></div>
+            </div>
+          </div>
+          <div class="grid grid-2 mb-24">
+            <div class="card">
+              <h3 class="card-title">Info del Bot</h3>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div>
+                  <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">Modelo Principal</div>
+                  <div class="mono" style="font-size:14px;font-weight:600;" id="aoModel">--</div>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">WhatsApp</div>
+                  <div style="font-size:14px;font-weight:600;" id="aoWhatsapp">--</div>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">Costo promedio/día</div>
+                  <div class="mono" style="font-size:14px;font-weight:600;" id="aoAvgCostDay">--</div>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">Datos actualizados</div>
+                  <div style="font-size:12px;" id="aoGeneratedAt">--</div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <h3 class="card-title">Comparación 30d</h3>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+                <div style="text-align:center;">
+                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">🤖 Clarita</div>
+                  <div class="mono" style="font-size:20px;font-weight:700;color:var(--accent);" id="aoCmpClaritaCost">$0.00</div>
+                  <div style="font-size:11px;color:var(--text-muted);" id="aoCmpClaritaTokens">0 tokens</div>
+                </div>
+                <div style="text-align:center;">
+                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:8px;">🌸 Amira</div>
+                  <div class="mono" style="font-size:20px;font-weight:700;color:var(--purple);" id="aoCmpAmiraCost">$0.00</div>
+                  <div style="font-size:11px;color:var(--text-muted);" id="aoCmpAmiraTokens">0 tokens</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- ── End Amira Overview ─────────────────────────────────── -->
+
+        <!-- ── Clarita Overview (shown when bot=clarita) ─────────── -->
+        <div id="claritaOverviewSection">
         <div class="grid mb-24" style="grid-template-columns: repeat(3, 1fr);">
           <div class="card">
             <div class="metric green">
               <div class="metric-value"><span id="runningAgents">0</span></div>
-              <div class="metric-label">Running Agents</div>
+              <div class="metric-label">Agentes activos</div>
               <div class="metric-subtitle"><span id="totalSessions">0</span> total · <span id="activeSessions">0</span>
-                active</div>
+                activos</div>
             </div>
           </div>
           <div class="card">
             <div class="metric accent">
               <div class="metric-value" id="todaySpend">$0.00</div>
-              <div class="metric-label">Today's Spend</div>
+              <div class="metric-label">Gasto de hoy</div>
               <div class="metric-subtitle" id="todayTokensOut" style="font-family:'JetBrains Mono',monospace"></div>
             </div>
           </div>
@@ -258,14 +348,14 @@
                   style="height:100%;border-radius:4px;width:0%;background:var(--green);transition:width 0.6s cubic-bezier(0.4,0,0.2,1);">
                 </div>
               </div>
-              <div class="metric-subtitle" style="margin-top:6px;">Avg response: <span id="avgResponseTime">--</span>
+              <div class="metric-subtitle" style="margin-top:6px;">Resp. promedio: <span id="avgResponseTime">--</span>
               </div>
             </div>
           </div>
         </div>
 
         <div class="card mb-24">
-          <h3 class="card-title">System Health</h3>
+          <h3 class="card-title">Estado del Sistema</h3>
           <div class="system-grid">
             <div class="system-metric">
               <div class="radial-gauge">
@@ -341,7 +431,7 @@
               <div style="text-align: center; padding-top: 20px;">
                 <div
                   style="font-size: 28px; font-weight: 700; font-family: 'JetBrains Mono', monospace; margin-bottom: 4px;"
-                  id="systemCrashesToday">0</div>
+                  id="systemCrashesHoy">0</div>
                 <div
                   style="font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;">
                   TODAY</div>
@@ -358,7 +448,7 @@
 
         <div class="grid grid-2 mb-24">
           <div class="card">
-            <h3 class="card-title">Services Status</h3>
+            <h3 class="card-title">Estado de Servicios</h3>
             <div id="servicesStatus"></div>
           </div>
           <div class="card">
@@ -369,35 +459,35 @@
 
         <div class="grid grid-2 mb-24">
           <div class="card">
-            <h3 class="card-title">Quick Actions</h3>
+            <h3 class="card-title">Acciones Rápidas</h3>
             <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:10px;">
-              <button onclick="quickAction('restart-openclaw', event)" class="qa-btn qa-danger">🔄 Restart
+              <button onclick="quickAction('restart-openclaw', event)" class="qa-btn qa-danger">🔄 Reiniciar
                 OpenClaw</button>
-              <button onclick="quickAction('restart-dashboard', event)" class="qa-btn">🔄 Restart Dashboard</button>
-              <button onclick="quickAction('clear-cache', event)" class="qa-btn">🗑️ Clear Cache</button>
-              <button onclick="scrapeClaudeUsage()" class="qa-btn">📊 Usage Scrape</button>
-              <button onclick="quickAction('restart-tailscale', event)" class="qa-btn">🌐 Restart Tailscale</button>
-              <button onclick="quickAction('update-openclaw', event)" class="qa-btn qa-danger">⬆️ Update
+              <button onclick="quickAction('restart-dashboard', event)" class="qa-btn">🔄 Reiniciar Dashboard</button>
+              <button onclick="quickAction('clear-cache', event)" class="qa-btn">🗑️ Limpiar caché</button>
+              <button onclick="scrapeClaudeUsage()" class="qa-btn">📊 Obtener uso</button>
+              <button onclick="quickAction('restart-tailscale', event)" class="qa-btn">🌐 Reiniciar Tailscale</button>
+              <button onclick="quickAction('update-openclaw', event)" class="qa-btn qa-danger">⬆️ Actualizar
                 OpenClaw</button>
-              <button onclick="quickAction('kill-tmux', event)" class="qa-btn">🧹 Kill Tmux Sessions</button>
-              <button onclick="quickAction('gc', event)" class="qa-btn">♻️ Git GC All</button>
-              <button onclick="quickAction('check-update', event)" class="qa-btn">🔍 Check Updates</button>
-              <button onclick="quickAction('sys-update', event)" class="qa-btn qa-danger">📦 Apt Update</button>
-              <button onclick="quickAction('disk-cleanup', event)" class="qa-btn">💾 Disk Cleanup</button>
-              <button onclick="quickAction('restart-claude', event)" class="qa-btn">🤖 Restart Claude Tmux</button>
+              <button onclick="quickAction('kill-tmux', event)" class="qa-btn">🧹 Matar sesiones Tmux</button>
+              <button onclick="quickAction('gc', event)" class="qa-btn">♻️ Git GC</button>
+              <button onclick="quickAction('check-update', event)" class="qa-btn">🔍 Buscar actualizaciones</button>
+              <button onclick="quickAction('sys-update', event)" class="qa-btn qa-danger">📦 Actualizar paquetes</button>
+              <button onclick="quickAction('disk-cleanup', event)" class="qa-btn">💾 Limpiar disco</button>
+              <button onclick="quickAction('restart-claude', event)" class="qa-btn">🤖 Reiniciar Claude Tmux</button>
             </div>
           </div>
           <div class="card">
-            <h3 class="card-title">Tailscale Status</h3>
+            <h3 class="card-title">Estado de Tailscale</h3>
             <div id="tailscaleStatus" style="display:flex;flex-direction:column;gap:12px;">
-              <div style="font-size:13px;color:var(--text-muted);">Loading...</div>
+              <div style="font-size:13px;color:var(--text-muted);">Cargando...</div>
             </div>
           </div>
         </div>
 
         <div class="grid grid-2 mb-24">
           <div class="card">
-            <h3 class="card-title">Lifetime Stats</h3>
+            <h3 class="card-title">Estadísticas Históricas</h3>
             <div id="lifetimeStats" style="display:grid;grid-template-columns:repeat(2,1fr);gap:16px;">
               <div>
                 <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;">Total
@@ -406,47 +496,47 @@
               </div>
               <div>
                 <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;">Total
-                  Messages</div>
+                  Mensajes</div>
                 <div class="mono" style="font-size:20px;font-weight:700;" id="ltMessages">--</div>
               </div>
               <div>
                 <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;">Total
-                  Cost</div>
+                  Costo</div>
                 <div class="mono" style="font-size:20px;font-weight:700;color:var(--accent);" id="ltCost">--</div>
               </div>
               <div>
                 <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;">Total
-                  Sessions</div>
+                  Sesiones</div>
                 <div class="mono" style="font-size:20px;font-weight:700;" id="ltSessions">--</div>
               </div>
               <div>
-                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;">First
-                  Session</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;">Primera
+                  Sesión</div>
                 <div style="font-size:13px;font-weight:600;" id="ltFirstDate">--</div>
               </div>
               <div>
-                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;">Days
-                  Active</div>
+                <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;text-transform:uppercase;">Días
+                  Activos</div>
                 <div style="font-size:20px;font-weight:700;color:var(--green);" id="ltDaysActive">--</div>
               </div>
             </div>
           </div>
           <div class="card">
-            <h3 class="card-title">Activity Streak</h3>
+            <h3 class="card-title">Racha de Actividad</h3>
             <div style="display:flex;align-items:center;gap:24px;">
               <div style="text-align:center;">
                 <div style="font-size:48px;margin-bottom:8px;">🔥</div>
                 <div style="font-size:36px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--accent);"
                   id="currentStreak">0</div>
-                <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;">Current Streak</div>
+                <div style="font-size:12px;color:var(--text-muted);text-transform:uppercase;">Racha Actual</div>
               </div>
               <div style="flex:1;">
                 <div style="margin-bottom:12px;">
-                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Longest Streak</div>
+                  <div style="font-size:11px;color:var(--text-muted);margin-bottom:4px;">Racha Más Larga</div>
                   <div style="font-size:24px;font-weight:700;font-family:'JetBrains Mono',monospace;"
                     id="longestStreak">0</div>
                 </div>
-                <div style="font-size:10px;color:var(--text-muted);margin-bottom:8px;">Last 30 Days</div>
+                <div style="font-size:10px;color:var(--text-muted);margin-bottom:8px;">Últimos 30 días</div>
                 <div id="streakCalendar" style="display:grid;grid-template-columns:repeat(10,1fr);gap:3px;"></div>
               </div>
             </div>
@@ -455,50 +545,51 @@
 
         <div class="grid grid-2 mb-24" style="align-items:start;">
           <div class="card">
-            <h3 class="card-title">Recent Activity</h3>
+            <h3 class="card-title">Actividad Reciente</h3>
             <div class="activity-feed" id="recentActivity" style="max-height:400px;overflow-y:auto;"></div>
-            <a href="#" class="view-all-link" data-page="sessions">View All Sessions →</a>
+            <a href="#" class="view-all-link" data-page="sessions">Ver todas las sesiones →</a>
           </div>
           <div>
             <div class="card mb-24">
-              <h3 class="card-title">Daily Spend (Last 7 Days)</h3>
+              <h3 class="card-title">Gasto diario (Últimos 7 días)</h3>
               <div class="bar-chart" id="dailySpendChart"></div>
             </div>
             <div class="card">
-              <h3 class="card-title">Memory Files</h3>
+              <h3 class="card-title">Archivos de Memoria</h3>
               <div id="memoryFiles"></div>
             </div>
           </div>
         </div>
 
         <div class="card mb-24">
-          <h3 class="card-title">Git Activity (7 Days)</h3>
+          <h3 class="card-title">Actividad Git (7 días)</h3>
           <div id="gitActivity" style="max-height:320px;overflow-y:auto;"></div>
         </div>
 
         <div class="grid grid-2 mb-24">
           <div class="card">
-            <h3 class="card-title">Today's Token Breakdown by Model</h3>
+            <h3 class="card-title">Tokens de hoy por modelo</h3>
             <div id="tokenBreakdown"></div>
           </div>
           <div class="card">
-            <h3 class="card-title">Session Models</h3>
+            <h3 class="card-title">Modelos usados</h3>
             <div id="sessionModels"></div>
           </div>
         </div>
+        </div><!-- end claritaOverviewSection -->
       </div>
 
       <div class="page" id="sessions">
         <div class="page-header">
-          <h1 class="page-title">Sessions</h1>
-          <p class="page-subtitle">All agent sessions and their activity</p>
+          <h1 class="page-title">Sesiones</h1>
+          <p class="page-subtitle">Todas las sesiones del agente y su actividad</p>
         </div>
 
         <div class="card mb-24" id="sessionsStatsBar" style="padding:16px 24px;">
           <div style="display:flex;gap:32px;flex-wrap:wrap;align-items:center;">
             <div style="display:flex;align-items:center;gap:8px;">
               <span
-                style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">Sessions</span>
+                style="font-size:12px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;">Sesiones</span>
               <span class="mono" style="font-size:20px;font-weight:700;" id="statsSessionCount">0</span>
             </div>
             <div style="display:flex;align-items:center;gap:8px;">
@@ -516,7 +607,7 @@
         </div>
 
         <div class="card mb-24" style="padding:16px 24px;">
-          <h3 class="card-title" style="margin-bottom:12px;">Session Timeline</h3>
+          <h3 class="card-title" style="margin-bottom:12px;">Línea de tiempo</h3>
           <div id="timelineCanvas" style="min-height:60px;"></div>
         </div>
 
@@ -524,28 +615,28 @@
         <div
           style="display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-bottom:20px;padding:16px 20px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;">
           <div class="filter-chips" id="statusFilters">
-            <div class="chip active" data-filter="all">All</div>
-            <div class="chip" data-filter="running">Active</div>
-            <div class="chip" data-filter="complete">Idle</div>
+            <div class="chip active" data-filter="all">Todos</div>
+            <div class="chip" data-filter="running">Activos</div>
+            <div class="chip" data-filter="complete">Inactivos</div>
             <div class="chip" data-filter="subagent">Subs</div>
             <div class="chip" data-filter="cron">Cron</div>
-            <div class="chip" data-filter="group">Groups</div>
+            <div class="chip" data-filter="group">Grupos</div>
           </div>
           <div style="width:1px;height:24px;background:var(--border);"></div>
           <div class="filter-chips" id="modelFilters">
-            <div class="chip active" data-model="all">All Models</div>
+            <div class="chip active" data-model="all">Todos los modelos</div>
             <div class="chip" data-model="opus-4-6">Opus</div>
             <div class="chip" data-model="sonnet">Sonnet</div>
             <div class="chip" data-model="gemini">Gemini</div>
           </div>
           <div style="width:1px;height:24px;background:var(--border);"></div>
           <div class="filter-chips" id="dateFilters">
-            <div class="chip" data-range="today">Today</div>
+            <div class="chip" data-range="today">Hoy</div>
             <div class="chip active" data-range="7d">7d</div>
             <div class="chip" data-range="30d">30d</div>
-            <div class="chip" data-range="all">All</div>
+            <div class="chip" data-range="all">Todos</div>
           </div>
-          <input type="text" class="search-box" placeholder="🔍 Search..." id="sessionSearch"
+          <input type="text" class="search-box" placeholder="🔍 Buscar..." id="sessionSearch"
             style="min-width:150px;max-width:250px;">
         </div>
 
@@ -558,7 +649,7 @@
             <div class="sortable" data-sort="model">Model</div>
             <div class="sortable" data-sort="tokens">Tokens</div>
             <div class="sortable" data-sort="cost">Cost</div>
-            <div>Last Message</div>
+            <div>Último mensaje</div>
             <div class="sortable" data-sort="updated">Updated</div>
             <div></div>
           </div>
@@ -568,18 +659,18 @@
 
       <div class="page" id="limits">
         <div class="page-header">
-          <h1 class="page-title">Rate Limits</h1>
-          <p class="page-subtitle">Claude Max 5x · 5-hour rolling usage windows</p>
+          <h1 class="page-title">Límites de Uso</h1>
+          <p class="page-subtitle">Claude Max 5x · Ventanas de 5 horas</p>
         </div>
 
         <div class="card mb-24">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <h3 class="card-title" style="margin:0;">Claude Code Usage (Anthropic)</h3>
+            <h3 class="card-title" style="margin:0;">Uso de Claude Code (Anthropic)</h3>
             <div style="display:flex;align-items:center;gap:12px;">
-              <span style="font-size:11px;color:var(--text-muted);" id="claudeUsageScrapedAt">Not scraped yet</span>
+              <span style="font-size:11px;color:var(--text-muted);" id="claudeUsageScrapedAt">Sin datos aún</span>
               <button onclick="scrapeClaudeUsage()"
                 style="padding:4px 12px;border-radius:6px;border:1px solid var(--border);background:var(--bg-secondary);color:var(--text-primary);cursor:pointer;font-size:12px;"
-                id="scrapeBtn">⟳ Refresh</button>
+                id="scrapeBtn">⟳ Actualizar</button>
             </div>
           </div>
           <div style="display:flex;flex-direction:column;gap:20px;" id="claudeUsageBars">
@@ -601,7 +692,7 @@
             </div>
             <div>
               <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
-                <span style="font-weight:600;font-size:14px;">Weekly (All Models)</span>
+                <span style="font-weight:600;font-size:14px;">Semanal (Todos los modelos)</span>
                 <span class="mono" style="font-size:12px;color:var(--text-secondary);" id="cuWeeklyLabel">--</span>
               </div>
               <div
@@ -617,7 +708,7 @@
             </div>
             <div>
               <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;">
-                <span style="font-weight:600;font-size:14px;">Weekly (Sonnet)</span>
+                <span style="font-weight:600;font-size:14px;">Semanal (Sonnet)</span>
                 <span class="mono" style="font-size:12px;color:var(--text-secondary);" id="cuSonnetLabel">--</span>
               </div>
               <div
@@ -636,7 +727,7 @@
 
         <div class="card mb-24" id="openaiUsageCard" style="display:none;">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <h3 class="card-title" style="margin:0;">OpenAI Usage (GPT/Codex)</h3>
+            <h3 class="card-title" style="margin:0;">Uso de OpenAI (GPT/Codex)</h3>
           </div>
           <div style="display:flex;flex-direction:column;gap:20px;">
             <div>
@@ -674,7 +765,7 @@
 
         <div class="card mb-24">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
-            <h3 class="card-title" style="margin:0;">Gemini Usage (Google)</h3>
+            <h3 class="card-title" style="margin:0;">Uso de Gemini (Google)</h3>
             <div style="display:flex;align-items:center;gap:12px;">
               <span style="font-size:11px;color:var(--text-muted);" id="geminiUsageScrapedAt">Not scraped yet</span>
               <button onclick="scrapeGeminiUsage()"
@@ -689,31 +780,31 @@
           <div class="card">
             <div class="metric accent">
               <div class="metric-value" id="opusUsageLimits">0%</div>
-              <div class="metric-label">Opus 5h Window</div>
+              <div class="metric-label">Ventana Opus 5h</div>
             </div>
           </div>
           <div class="card">
             <div class="metric">
               <div class="metric-value" id="totalCalls">0</div>
-              <div class="metric-label">API Calls (5h)</div>
+              <div class="metric-label">Llamadas API (5h)</div>
             </div>
           </div>
           <div class="card">
             <div class="metric">
               <div class="metric-value" id="windowCost">$0.00</div>
-              <div class="metric-label">Window Cost</div>
+              <div class="metric-label">Costo ventana</div>
             </div>
           </div>
           <div class="card">
             <div class="metric">
               <div class="metric-value" id="burnRateDisplay">--</div>
-              <div class="metric-label">Burn Rate (tok/min)</div>
+              <div class="metric-label">Velocidad (tok/min)</div>
             </div>
           </div>
         </div>
 
         <div class="card mb-24">
-          <h3 class="card-title">Output Token Usage</h3>
+          <h3 class="card-title">Uso de tokens de salida</h3>
           <div style="display:flex;flex-direction:column;gap:28px;margin-top:8px;">
             <div>
               <div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px;">
@@ -752,97 +843,162 @@
 
         <div class="grid grid-3 mb-24">
           <div class="card" id="timeToLimitCard">
-            <h3 class="card-title">Est. Time to Limit</h3>
+            <h3 class="card-title">Tiempo estimado al límite</h3>
             <div style="font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:700;" id="timeToLimitValue">
-              Safe</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:8px;" id="timeToLimitSub">Low usage</div>
+              Sin riesgo</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:8px;" id="timeToLimitSub">Uso bajo</div>
           </div>
           <div class="card">
-            <h3 class="card-title">Window Resets In</h3>
+            <h3 class="card-title">Reinicio de ventana</h3>
             <div style="font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:700;" id="windowResetValue">--
             </div>
             <div style="font-size:12px;color:var(--text-muted);margin-top:8px;" id="windowResetSub"></div>
           </div>
           <div class="card">
-            <h3 class="card-title">Cost Per Minute</h3>
+            <h3 class="card-title">Costo por minuto</h3>
             <div style="font-family:'JetBrains Mono',monospace;font-size:28px;font-weight:700;color:var(--accent);"
               id="costPerMinValue">$0.00</div>
-            <div style="font-size:12px;color:var(--text-muted);margin-top:8px;" id="costPerMinSub">Last 30 minutes</div>
+            <div style="font-size:12px;color:var(--text-muted);margin-top:8px;" id="costPerMinSub">Últimos 30 minutos</div>
           </div>
         </div>
 
         <div class="grid grid-2 mb-24">
           <div class="card">
-            <h3 class="card-title">Model Usage Breakdown</h3>
+            <h3 class="card-title">Desglose por modelo</h3>
             <div id="modelUsageDonut" style="display:flex;align-items:center;justify-content:center;min-height:300px;">
             </div>
           </div>
           <div class="card">
-            <h3 class="card-title">Window Cost Breakdown</h3>
+            <h3 class="card-title">Desglose de costo</h3>
             <div id="windowBreakdown"></div>
           </div>
         </div>
 
         <div class="card mb-24">
-          <h3 class="card-title">Recent API Calls</h3>
+          <h3 class="card-title">Llamadas API recientes</h3>
           <div id="recentCalls" style="max-height:360px;overflow-y:auto;"></div>
         </div>
       </div>
 
       <div class="page" id="costs">
         <div class="page-header">
-          <h1 class="page-title">Costs</h1>
-          <p class="page-subtitle">Spending breakdown and trends</p>
+          <h1 class="page-title" id="costsTitle">Costos</h1>
+          <p class="page-subtitle">Desglose y tendencias de gasto</p>
         </div>
 
-        <div class="grid grid-4 mb-24">
-          <div class="card">
-            <div class="metric accent">
-              <div class="metric-value" id="costToday">$0.00</div>
-              <div class="metric-label">Today</div>
+        <!-- Clarita costs (default) -->
+        <div id="claritaCostsSection">
+          <div class="grid grid-4 mb-24">
+            <div class="card">
+              <div class="metric accent">
+                <div class="metric-value" id="costToday">$0.00</div>
+                <div class="metric-label">Hoy</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="metric accent">
+                <div class="metric-value" id="costWeek">$0.00</div>
+                <div class="metric-label">Esta semana</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="metric accent">
+                <div class="metric-value" id="costTotal">$0.00</div>
+                <div class="metric-label">Total histórico</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="metric">
+                <div class="metric-value" id="costAvg">$0.00</div>
+                <div class="metric-label">Promedio/día</div>
+              </div>
             </div>
           </div>
-          <div class="card">
-            <div class="metric accent">
-              <div class="metric-value" id="costWeek">$0.00</div>
-              <div class="metric-label">This Week</div>
-            </div>
+          <div class="card mb-24">
+            <h3 class="card-title">Tendencia de gasto diario (14 días)</h3>
+            <div id="costTrendChart" style="min-height:240px;"></div>
           </div>
-          <div class="card">
-            <div class="metric accent">
-              <div class="metric-value" id="costTotal">$0.00</div>
-              <div class="metric-label">All Time</div>
+          <div class="grid grid-2">
+            <div class="card">
+              <h3 class="card-title">Costo por modelo</h3>
+              <div id="costByModel"></div>
             </div>
-          </div>
-          <div class="card">
-            <div class="metric">
-              <div class="metric-value" id="costAvg">$0.00</div>
-              <div class="metric-label">Avg/Day</div>
+            <div class="card">
+              <h3 class="card-title">Sesiones más costosas</h3>
+              <div id="topSessions"></div>
             </div>
           </div>
         </div>
 
-        <div class="card mb-24">
-          <h3 class="card-title">Daily Spend Trend (Last 14 Days)</h3>
-          <div id="costTrendChart" style="min-height:240px;"></div>
-        </div>
-
-        <div class="grid grid-2">
-          <div class="card">
-            <h3 class="card-title">Cost by Model</h3>
-            <div id="costByModel"></div>
+        <!-- Amira costs (shown when bot=amira) -->
+        <div id="amiraCostsSection" style="display:none;">
+          <div class="grid grid-4 mb-24">
+            <div class="card">
+              <div class="metric accent">
+                <div class="metric-value" id="acCostTotal">$0.00</div>
+                <div class="metric-label">Total 30d</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="metric accent">
+                <div class="metric-value" id="acCostAvg">$0.00</div>
+                <div class="metric-label">Promedio/día</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="metric green">
+                <div class="metric-value" id="acTokensTotal">0</div>
+                <div class="metric-label">Tokens 30d</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="metric">
+                <div class="metric-value" id="acModel">--</div>
+                <div class="metric-label">Modelo</div>
+              </div>
+            </div>
           </div>
-          <div class="card">
-            <h3 class="card-title">Top Sessions</h3>
-            <div id="topSessions"></div>
+          <div class="card mb-24">
+            <h3 class="card-title">Gasto diario — últimos 30 días</h3>
+            <div id="acCostChart" class="bar-chart" style="min-height:180px;"></div>
           </div>
+          <div class="grid grid-2 mb-24">
+            <div class="card">
+              <h3 class="card-title">Comparación vs Clarita</h3>
+              <div style="display:flex;flex-direction:column;gap:16px;margin-top:8px;">
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                    <span style="font-size:13px;font-weight:600;">🤖 Clarita</span>
+                    <span class="mono" style="font-size:13px;" id="acCmpClaritaCost">$0.00</span>
+                  </div>
+                  <div style="height:8px;background:var(--bg-primary);border-radius:4px;overflow:hidden;">
+                    <div id="acCmpClaritaBar" style="height:100%;background:rgba(99,102,241,0.7);border-radius:4px;width:0%;transition:width 0.6s;"></div>
+                  </div>
+                </div>
+                <div>
+                  <div style="display:flex;justify-content:space-between;margin-bottom:6px;">
+                    <span style="font-size:13px;font-weight:600;">🌸 Amira</span>
+                    <span class="mono" style="font-size:13px;" id="acCmpAmiraCost">$0.00</span>
+                  </div>
+                  <div style="height:8px;background:var(--bg-primary);border-radius:4px;overflow:hidden;">
+                    <div id="acCmpAmiraBar" style="height:100%;background:rgba(168,85,247,0.7);border-radius:4px;width:0%;transition:width 0.6s;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <h3 class="card-title">Cron Jobs</h3>
+              <div id="acCronsTable" style="overflow-x:auto;"></div>
+            </div>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);text-align:right;" id="acGeneratedAt"></div>
         </div>
       </div>
 
       <div class="page" id="feed">
         <div class="page-header">
-          <h1 class="page-title">Live Feed</h1>
-          <p class="page-subtitle">Real-time agent activity stream — all sessions</p>
+          <h1 class="page-title">Feed en Vivo</h1>
+          <p class="page-subtitle">Stream de actividad en tiempo real</p>
         </div>
 
         <div class="feed-controls" style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
@@ -851,46 +1007,46 @@
           </div>
           <select id="feedSessionFilter" onchange="applyFeedFilter()"
             style="background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:12px;">
-            <option value="all">All Sessions</option>
+            <option value="all">Todas las sesiones</option>
           </select>
           <select id="feedRoleFilter" onchange="applyFeedFilter()"
             style="background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:12px;">
-            <option value="all">All Roles</option>
-            <option value="user">User</option>
-            <option value="assistant">Assistant</option>
+            <option value="all">Todos los roles</option>
+            <option value="user">Usuario</option>
+            <option value="assistant">Asistente</option>
           </select>
           <div style="position:relative;flex:1;min-width:200px;max-width:300px;">
-            <input type="text" id="feedSearchInput" placeholder="🔍 Search feed..."
+            <input type="text" id="feedSearchInput" placeholder="🔍 Buscar en feed..."
               style="width:100%;padding:4px 28px 4px 8px;background:var(--bg-secondary);color:var(--text-primary);border:1px solid var(--border);border-radius:6px;font-size:12px;">
             <button onclick="clearFeedSearch()"
               style="position:absolute;right:4px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text-muted);cursor:pointer;font-size:14px;padding:2px 6px;">✕</button>
           </div>
-          <button class="pause-btn" id="pauseBtn">▶ Start</button>
+          <button class="pause-btn" id="pauseBtn">▶ Iniciar</button>
           <button onclick="document.getElementById('feedStream').innerHTML=''"
             style="background:var(--bg-secondary);color:var(--text-secondary);border:1px solid var(--border);border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;">Clear</button>
         </div>
 
         <div class="card">
           <div class="feed-stream" id="feedStream">
-            <div style="text-align:center;padding:40px;color:var(--text-muted);font-size:14px;">Click <b>▶ Start</b> to
-              begin streaming</div>
+            <div style="text-align:center;padding:40px;color:var(--text-muted);font-size:14px;">Hacé clic en <b>▶ Iniciar</b> para
+              comenzar el stream</div>
           </div>
         </div>
       </div>
 
       <div class="page" id="memory">
         <div class="page-header">
-          <h1 class="page-title">Memory</h1>
-          <p class="page-subtitle">Agent memory files and daily notes</p>
+          <h1 class="page-title">Memoria</h1>
+          <p class="page-subtitle">Archivos de memoria y notas del agente</p>
         </div>
 
         <div class="grid grid-2 mb-24">
           <div class="card">
-            <h3 class="card-title">Memory Files</h3>
+            <h3 class="card-title">Archivos de Memoria</h3>
             <div id="memoryFilesList" style="max-height:600px;overflow-y:auto;"></div>
           </div>
           <div class="card">
-            <h3 class="card-title" id="memoryFileTitle">Select a file</h3>
+            <h3 class="card-title" id="memoryFileTitle">Seleccioná un archivo</h3>
             <div id="memoryFileContent"
               style="max-height:600px;overflow-y:auto;white-space:pre-wrap;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;color:var(--text-primary);">
             </div>
@@ -900,28 +1056,28 @@
 
       <div class="page" id="files">
         <div class="page-header">
-          <h1 class="page-title">Files</h1>
-          <p class="page-subtitle">Key workspace and config files</p>
+          <h1 class="page-title">Archivos</h1>
+          <p class="page-subtitle">Archivos de workspace y configuración</p>
         </div>
 
         <div class="grid grid-2 mb-24">
           <div class="card">
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;">
-              <h3 class="card-title" style="margin-bottom:0;flex:1;">Key Files</h3>
+              <h3 class="card-title" style="margin-bottom:0;flex:1;">Archivos Clave</h3>
               <button onclick="window.fetchKeyFiles()"
                 style="padding:4px 10px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border);border-radius:6px;font-size:11px;cursor:pointer;">↻
-                Refresh</button>
+                Actualizar</button>
             </div>
             <div id="keyFilesList" style="max-height:572px;overflow-y:auto;"></div>
           </div>
           <div class="card">
             <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
               <h3 class="card-title" id="keyFileTitle" style="margin-bottom:0;flex:1;">Select a file</h3>
-              <button id="keyFileEditBtn" onclick="window.editKeyFile()"
+              <button id="keyFileEditarBtn" onclick="window.editKeyFile()"
                 style="display:none;padding:6px 14px;background:var(--accent);color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Edit</button>
-              <button id="keyFileSaveBtn" onclick="window.saveKeyFile()"
+              <button id="keyFileGuardarBtn" onclick="window.saveKeyFile()"
                 style="display:none;padding:6px 14px;background:var(--green);color:white;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Save</button>
-              <button id="keyFileCancelBtn" onclick="window.cancelEditKeyFile()"
+              <button id="keyFileCancelarBtn" onclick="window.cancelEditKeyFile()"
                 style="display:none;padding:6px 14px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border);border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;">Cancel</button>
             </div>
             <div id="keyFileContent"
@@ -936,7 +1092,7 @@
       <div class="page" id="logs">
         <div class="page-header">
           <h1 class="page-title">Logs</h1>
-          <p class="page-subtitle">System and service logs viewer</p>
+          <p class="page-subtitle">Visor de logs del sistema</p>
         </div>
 
         <div class="card mb-24" style="padding:16px 24px;">
@@ -956,7 +1112,7 @@
             <label style="display:flex;align-items:center;gap:8px;cursor:pointer;margin-left:auto;">
               <input type="checkbox" id="logAutoRefresh" onchange="toggleLogAutoRefresh(this.checked)"
                 style="width:18px;height:18px;cursor:pointer;">
-              <span style="font-size:14px;font-weight:500;">Auto-refresh (5s)</span>
+              <span style="font-size:14px;font-weight:500;">Auto-actualizar (5s)</span>
             </label>
           </div>
         </div>
@@ -964,23 +1120,23 @@
         <div class="card">
           <div id="logViewer"
             style="background:var(--bg-primary);border-radius:8px;padding:16px;font-family:'JetBrains Mono',monospace;font-size:12px;line-height:1.6;color:var(--text-primary);max-height:700px;overflow-y:auto;white-space:pre-wrap;word-wrap:break-word;">
-            <div style="color:var(--text-muted);">Click Refresh to load logs...</div>
+            <div style="color:var(--text-muted);">Hacé clic en Actualizar para cargar logs...</div>
           </div>
         </div>
       </div>
 
       <div class="page" id="security">
         <div class="page-header">
-          <h1 class="page-title">Security</h1>
-          <p class="page-subtitle">Authentication and security settings</p>
+          <h1 class="page-title">Seguridad</h1>
+          <p class="page-subtitle">Configuración de autenticación y seguridad</p>
         </div>
 
         <div class="card mb-24">
-          <div class="card-title">🔑 Change Password</div>
+          <div class="card-title">🔑 Cambiar Contraseña</div>
 
           <form onsubmit="return handleChangePassword(event)" style="max-width:500px;">
             <div style="margin-bottom:16px;">
-              <input type="password" id="currentPassword" placeholder="Current Password"
+              <input type="password" id="currentPassword" placeholder="Contraseña actual"
                 style="width:100%;padding:14px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:14px;"
                 autocomplete="current-password" required>
             </div>
@@ -999,30 +1155,29 @@
             </div>
             <button type="submit" id="changePasswordBtn"
               style="padding:12px 24px;background:linear-gradient(135deg,var(--accent),var(--purple));color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;">
-              Change Password
+              Cambiar Contraseña
             </button>
           </form>
 
           <div
             style="margin-top:16px;padding:12px;background:rgba(59,130,246,0.1);border:1px solid rgba(59,130,246,0.3);border-radius:8px;">
             <div style="font-size:12px;color:var(--text-secondary);">
-              <strong>Forgot your password?</strong> Use the recovery token from your server console or environment
-              variables to reset it via the login screen.
+              <strong>¿Olvidaste tu contraseña?</strong> Usá el token de recuperación de la consola del servidor para restablecerla.
             </div>
           </div>
         </div>
 
         <div class="card">
-          <div class="card-title">🔐 Two-Factor Authentication (TOTP)</div>
+          <div class="card-title">🔐 Autenticación de Dos Factores (TOTP)</div>
 
           <div id="mfaDisabledView" style="display:none;">
             <p style="color:var(--text-secondary);margin-bottom:24px;line-height:1.6;">
-              Add an extra layer of security by enabling TOTP-based two-factor authentication.
-              You'll need an authenticator app like Google Authenticator or Authy.
+              Agregá una capa extra de seguridad habilitando la autenticación de dos factores (TOTP).
+              Necesitás una app como Google Authenticator o Authy.
             </p>
             <button onclick="setupMFA()" id="enableMfaBtn"
               style="padding:12px 24px;background:linear-gradient(135deg,var(--green),#059669);color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;">
-              ✅ Enable MFA
+              ✅ Activar MFA
             </button>
           </div>
 
@@ -1032,7 +1187,7 @@
               <div style="display:flex;align-items:center;gap:12px;">
                 <span style="font-size:24px;">✅</span>
                 <div>
-                  <div style="font-weight:600;color:var(--green);margin-bottom:4px;">MFA is enabled</div>
+                  <div style="font-weight:600;color:var(--green);margin-bottom:4px;">MFA está activo</div>
                   <div style="font-size:13px;color:var(--text-secondary);">Your account is protected with two-factor
                     authentication</div>
                 </div>
@@ -1040,13 +1195,13 @@
             </div>
             <button onclick="disableMFA()" id="disableMfaBtn"
               style="padding:12px 24px;background:linear-gradient(135deg,var(--red),#dc2626);color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;">
-              ⚠️ Disable MFA
+              ⚠️ Desactivar MFA
             </button>
           </div>
 
           <div id="mfaSetupView" style="display:none;">
             <p style="color:var(--text-secondary);margin-bottom:16px;line-height:1.6;">
-              Scan this QR code with your authenticator app:
+              Escaneá este código QR con tu app autenticadora:
             </p>
             <div id="qrCodeContainer"
               style="display:flex;justify-content:center;margin:24px 0;padding:24px;background:white;border-radius:12px;">
@@ -1059,8 +1214,8 @@
                 id="mfaSecretDisplay"></div>
             </div>
             <div style="margin-bottom:16px;">
-              <div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">Enter the
-                6-digit code from your authenticator app to verify:</div>
+              <div style="font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:8px;">Ingresá el
+                código de 6 dígitos de tu app para verificar:</div>
               <input type="text" id="mfaVerifyCode" placeholder="000000" maxlength="6" pattern="[0-9]{6}"
                 inputmode="numeric"
                 style="width:200px;padding:12px;background:var(--bg-secondary);border:1px solid var(--border);border-radius:8px;color:var(--text-primary);font-size:18px;font-family:'JetBrains Mono',monospace;text-align:center;letter-spacing:0.5em;">
@@ -1068,7 +1223,7 @@
             </div>
             <button onclick="confirmMFASetup()" id="confirmMfaBtn"
               style="padding:12px 24px;background:linear-gradient(135deg,var(--accent),var(--purple));color:white;border:none;border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;">
-              ✅ Verify & Enable
+              ✅ Verificar y activar
             </button>
             <button onclick="cancelMFASetup()"
               style="padding:12px 24px;background:var(--bg-tertiary);color:var(--text-secondary);border:1px solid var(--border);border-radius:8px;font-weight:600;cursor:pointer;font-size:14px;margin-left:12px;">
@@ -1077,6 +1232,161 @@
           </div>
         </div>
       </div>
+
+      <!-- ── Amira Page ────────────────────────────────────────────── -->
+      <div class="page" id="amira">
+        <div class="page-header">
+          <h1 class="page-title">🌸 Amira</h1>
+          <p class="page-subtitle">Semillero El Manantial — Bot de ventas y atención</p>
+        </div>
+
+        <!-- Bot selector tabs -->
+        <div style="display:flex;gap:8px;margin-bottom:24px;background:var(--bg-card);border:1px solid var(--border);border-radius:12px;padding:8px;width:fit-content;">
+          <button id="amiraTabClarita" onclick="setAmiraTab('clarita')"
+            style="padding:8px 20px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;background:var(--accent);color:#fff;transition:all 0.2s;">
+            Clarita
+          </button>
+          <button id="amiraTabAmira" onclick="setAmiraTab('amira')"
+            style="padding:8px 20px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;background:transparent;color:var(--text-muted);transition:all 0.2s;">
+            Amira
+          </button>
+          <button id="amiraTabCompare" onclick="setAmiraTab('compare')"
+            style="padding:8px 20px;border-radius:8px;border:none;cursor:pointer;font-size:13px;font-weight:600;background:transparent;color:var(--text-muted);transition:all 0.2s;">
+            Comparar
+          </button>
+        </div>
+
+        <!-- Clarita tab content -->
+        <div id="amiraViewClarita">
+          <div class="grid mb-24" style="grid-template-columns:repeat(4,1fr);">
+            <div class="card">
+              <div class="metric accent">
+                <div class="metric-value" id="claritaTotalCost30d">$0.00</div>
+                <div class="metric-label">Costo 30d</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="metric green">
+                <div class="metric-value" id="claritaTotalTokens30d">0</div>
+                <div class="metric-label">Tokens 30d</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="metric">
+                <div class="metric-value" id="claritaMsgsIn7d">0</div>
+                <div class="metric-label">Msgs recibidos 7d</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="metric">
+                <div class="metric-value" id="claritaActiveCrons">0</div>
+                <div class="metric-label">Crons activos</div>
+              </div>
+            </div>
+          </div>
+          <div class="card mb-24">
+            <h3 class="card-title">Mensajes por día — últimos 14d</h3>
+            <div id="claritaDailyChart" class="bar-chart" style="min-height:140px;"></div>
+          </div>
+          <div class="card mb-24">
+            <h3 class="card-title">Cron Jobs</h3>
+            <div id="claritaCronsTable" style="overflow-x:auto;"></div>
+          </div>
+        </div>
+
+        <!-- Amira tab content -->
+        <div id="amiraViewAmira" style="display:none;">
+          <div class="grid mb-24" style="grid-template-columns:repeat(4,1fr);">
+            <div class="card">
+              <div class="metric accent">
+                <div class="metric-value" id="amiraTotalCost30d">$0.00</div>
+                <div class="metric-label">Costo 30d</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="metric green">
+                <div class="metric-value" id="amiraTotalTokens30d">0</div>
+                <div class="metric-label">Tokens 30d</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="metric">
+                <div class="metric-value" id="amiraMsgsIn7d">0</div>
+                <div class="metric-label">Msgs recibidos 7d</div>
+              </div>
+            </div>
+            <div class="card">
+              <div class="metric">
+                <div class="metric-value" id="amiraActiveCrons">0</div>
+                <div class="metric-label">Crons activos</div>
+              </div>
+            </div>
+          </div>
+          <div class="card mb-24">
+            <h3 class="card-title">Mensajes por día — últimos 14d</h3>
+            <div id="amiraDailyChart" class="bar-chart" style="min-height:140px;"></div>
+          </div>
+          <div class="card mb-24">
+            <h3 class="card-title">Cron Jobs</h3>
+            <div id="amiraCronsTable" style="overflow-x:auto;"></div>
+          </div>
+        </div>
+
+        <!-- Compare tab content -->
+        <div id="amiraViewCompare" style="display:none;">
+          <div class="grid grid-2 mb-24">
+            <div class="card">
+              <h3 class="card-title" style="color:var(--accent);">Clarita</h3>
+              <div class="grid" style="grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                <div>
+                  <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">Costo 30d</div>
+                  <div class="mono" style="font-size:22px;font-weight:700;" id="cmpClaritaCost">$0.00</div>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">Tokens 30d</div>
+                  <div class="mono" style="font-size:22px;font-weight:700;" id="cmpClaritaTokens">0</div>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">Msgs in 7d</div>
+                  <div class="mono" style="font-size:22px;font-weight:700;" id="cmpClaritaMsgs">0</div>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">WhatsApp</div>
+                  <div style="font-size:14px;font-weight:600;" id="cmpClaritaWA">--</div>
+                </div>
+              </div>
+            </div>
+            <div class="card">
+              <h3 class="card-title" style="color:var(--purple);">Amira</h3>
+              <div class="grid" style="grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px;">
+                <div>
+                  <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">Costo 30d</div>
+                  <div class="mono" style="font-size:22px;font-weight:700;" id="cmpAmiraCost">$0.00</div>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">Tokens 30d</div>
+                  <div class="mono" style="font-size:22px;font-weight:700;" id="cmpAmiraTokens">0</div>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">Msgs in 7d</div>
+                  <div class="mono" style="font-size:22px;font-weight:700;" id="cmpAmiraMsgs">0</div>
+                </div>
+                <div>
+                  <div style="font-size:11px;color:var(--text-muted);text-transform:uppercase;margin-bottom:4px;">WhatsApp</div>
+                  <div style="font-size:14px;font-weight:600;" id="cmpAmiraWA">--</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card mb-24">
+            <h3 class="card-title">Mensajes por día — comparación (últimos 14d)</h3>
+            <div id="compareDailyChart" class="bar-chart" style="min-height:140px;"></div>
+          </div>
+          <div style="font-size:11px;color:var(--text-muted);text-align:right;" id="metricsGeneratedAt"></div>
+        </div>
+
+      </div>
+      <!-- ── End Amira Page ─────────────────────────────────────────────── -->
 
     </main>
   </div>
@@ -1087,16 +1397,16 @@
 
   <div class="shortcuts-overlay" id="shortcutsOverlay" onclick="if(event.target===this)toggleShortcuts()">
     <div class="shortcuts-panel">
-      <h2 style="font-size:24px;font-weight:700;margin-bottom:24px;">Keyboard Shortcuts</h2>
-      <div class="shortcut-item"><span>Switch to Overview</span><span class="shortcut-key">1</span></div>
-      <div class="shortcut-item"><span>Switch to Sessions</span><span class="shortcut-key">2</span></div>
-      <div class="shortcut-item"><span>Switch to Costs</span><span class="shortcut-key">3</span></div>
-      <div class="shortcut-item"><span>Switch to Rate Limits</span><span class="shortcut-key">4</span></div>
-      <div class="shortcut-item"><span>Switch to Live Feed</span><span class="shortcut-key">5</span></div>
-      <div class="shortcut-item"><span>Pause/Resume Feed</span><span class="shortcut-key">Space</span></div>
-      <div class="shortcut-item"><span>Focus Search</span><span class="shortcut-key">/</span></div>
-      <div class="shortcut-item"><span>Close Modals</span><span class="shortcut-key">Esc</span></div>
-      <div class="shortcut-item" style="border:none;"><span>Show This Help</span><span class="shortcut-key">?</span>
+      <h2 style="font-size:24px;font-weight:700;margin-bottom:24px;">Atajos de Teclado</h2>
+      <div class="shortcut-item"><span>Ir a Resumen</span><span class="shortcut-key">1</span></div>
+      <div class="shortcut-item"><span>Ir a Sesiones</span><span class="shortcut-key">2</span></div>
+      <div class="shortcut-item"><span>Ir a Costos</span><span class="shortcut-key">3</span></div>
+      <div class="shortcut-item"><span>Ir a Límites</span><span class="shortcut-key">4</span></div>
+      <div class="shortcut-item"><span>Ir a Feed en Vivo</span><span class="shortcut-key">5</span></div>
+      <div class="shortcut-item"><span>Pausar/Reanudar Feed</span><span class="shortcut-key">Space</span></div>
+      <div class="shortcut-item"><span>Enfocar búsqueda</span><span class="shortcut-key">/</span></div>
+      <div class="shortcut-item"><span>Cerrar modales</span><span class="shortcut-key">Esc</span></div>
+      <div class="shortcut-item" style="border:none;"><span>Mostrar esta ayuda</span><span class="shortcut-key">?</span>
       </div>
     </div>
   </div>
@@ -1130,18 +1440,18 @@
     <div class="status-bar-section">
       <div class="status-bar-item">
         <span class="status-indicator"></span>
-        <span>Connected</span>
+        <span>Conectado</span>
       </div>
       <div class="status-bar-item">
         <span>Uptime: <span id="statusUptime">--</span></span>
       </div>
       <div class="status-bar-item">
-        <span>Model: <span id="statusModel">--</span></span>
+        <span>Modelo: <span id="statusModel">--</span></span>
       </div>
     </div>
     <div class="status-bar-section">
       <div class="status-bar-item">
-        <span>Last activity: <span id="statusLastActivity">--</span></span>
+        <span>Última actividad: <span id="statusLastActivity">--</span></span>
       </div>
       <div class="status-bar-item">
         <span id="statusVersion">OpenClaw</span>
@@ -1150,6 +1460,389 @@
   </div>
 
   <script src="/public/js/app.js"></script>
+  <script>
+  // ── Bot Selector Logic ─────────────────────────────────────────────────────
+  let _currentBot = 'clarita';
+  let _amiraMetrics = null;
+  let _amiraCurrentTab = 'clarita';
+
+  function switchBot(bot) {
+    _currentBot = bot;
+    // Update selector buttons
+    const btnClarita = document.getElementById('botBtnClarita');
+    const btnAmira = document.getElementById('botBtnAmira');
+    if (btnClarita && btnAmira) {
+      btnClarita.style.background = bot === 'clarita' ? 'var(--accent)' : 'transparent';
+      btnClarita.style.color = bot === 'clarita' ? '#fff' : 'var(--text-muted)';
+      btnAmira.style.background = bot === 'amira' ? 'var(--purple)' : 'transparent';
+      btnAmira.style.color = bot === 'amira' ? '#fff' : 'var(--text-muted)';
+    }
+    // Show/hide clarita-only nav items
+    document.querySelectorAll('.clarita-only').forEach(el => {
+      el.style.display = bot === 'clarita' ? '' : 'none';
+    });
+    // Update Overview
+    const claritaOv = document.getElementById('claritaOverviewSection');
+    const amiraOv = document.getElementById('amiraOverviewSection');
+    if (claritaOv) claritaOv.style.display = bot === 'clarita' ? '' : 'none';
+    if (amiraOv) amiraOv.style.display = bot === 'amira' ? '' : 'none';
+    const ovTitle = document.getElementById('overviewTitle');
+    const ovSub = document.getElementById('overviewSubtitle');
+    if (ovTitle) ovTitle.textContent = bot === 'clarita' ? 'Resumen' : '🌸 Amira — Resumen';
+    if (ovSub) ovSub.textContent = bot === 'clarita' ? 'Actividad del agente y rendimiento del sistema' : 'Semillero El Manantial — Bot de ventas y atención';
+    // Update Costs page
+    const claritaCosts = document.getElementById('claritaCostsSection');
+    const amiraCosts = document.getElementById('amiraCostsSection');
+    if (claritaCosts) claritaCosts.style.display = bot === 'clarita' ? '' : 'none';
+    if (amiraCosts) amiraCosts.style.display = bot === 'amira' ? '' : 'none';
+    const costsTitle = document.getElementById('costsTitle');
+    if (costsTitle) costsTitle.textContent = bot === 'clarita' ? 'Costos' : '🌸 Amira — Costos';
+    // Navigate to overview if switching away from clarita-only page
+    const currentPage = document.querySelector('.page.active');
+    if (bot === 'amira' && currentPage) {
+      const pid = currentPage.id;
+      const claritaOnlyPages = ['sessions','limits','memory','files','logs','feed'];
+      if (claritaOnlyPages.includes(pid)) {
+        // Navigate to overview
+        const overviewNav = document.querySelector('.nav-item[data-page="overview"]');
+        if (overviewNav) overviewNav.click();
+      }
+    }
+    // Load Amira data if needed
+    if (bot === 'amira') {
+      loadAmiraMetrics();
+    }
+  }
+
+  async function loadAmiraMetrics() {
+    if (_amiraMetrics) {
+      renderAmiraOverview();
+      renderAmiraCosts();
+      return;
+    }
+    try {
+      const token = sessionStorage.getItem('dashboardToken') || localStorage.getItem('dashboardToken');
+      const resp = await fetch('/api/metrics-summary', { headers: { 'Authorization': 'Bearer ' + token } });
+      _amiraMetrics = await resp.json();
+      renderAmiraOverview();
+      renderAmiraCosts();
+    } catch (e) {
+      console.error('Error cargando métricas de Amira:', e);
+    }
+  }
+
+  function renderAmiraOverview() {
+    if (!_amiraMetrics) return;
+    const a = _amiraMetrics.amira || {};
+    const c = _amiraMetrics.clarita || {};
+    // Stats
+    const s7 = a.stats_7d || {};
+    setText('aoTotalCost', '$' + (a.total_cost_usd || 0).toFixed(2));
+    setText('aoTotalTokens', fmt(a.total_tokens || 0));
+    setText('aoMsgsIn', fmt(s7.total_msgs_in || 0));
+    const activeCrons = (a.crons || []).filter(j => j.enabled).length;
+    setText('aoActiveCrons', activeCrons);
+    setText('aoModel', a.model_primary || '--');
+    const wa = a.whatsapp || 'unknown';
+    const waEl = document.getElementById('aoWhatsapp');
+    if (waEl) { waEl.textContent = wa; waEl.style.color = wa === 'connected' ? 'var(--green)' : 'var(--text-muted)'; }
+    const days = a.days || [];
+    const avgCost = days.length > 0 ? (a.total_cost_usd / Math.max(days.length, 1)) : 0;
+    setText('aoAvgCostDay', '$' + avgCost.toFixed(3));
+    if (_amiraMetrics.generated_at) {
+      setText('aoGeneratedAt', new Date(_amiraMetrics.generated_at).toLocaleString('es-AR'));
+    }
+    // Comparison
+    setText('aoCmpClaritaCost', '$' + (c.total_cost_usd || 0).toFixed(2));
+    setText('aoCmpClaritaTokens', fmt(c.total_tokens || 0) + ' tokens');
+    setText('aoCmpAmiraCost', '$' + (a.total_cost_usd || 0).toFixed(2));
+    setText('aoCmpAmiraTokens', fmt(a.total_tokens || 0) + ' tokens');
+    // Chart
+    renderDailyChart('aoDailyChart', (a.days || []).slice(-14), 'Amira', 'rgba(168,85,247,0.8)', 'rgba(168,85,247,0.2)');
+    // Crons
+    renderCronsTable('aoCronsTable', a.crons || [], 'amira');
+  }
+
+  function renderAmiraCosts() {
+    if (!_amiraMetrics) return;
+    const a = _amiraMetrics.amira || {};
+    const c = _amiraMetrics.clarita || {};
+    const days = a.days || [];
+    setText('acCostTotal', '$' + (a.total_cost_usd || 0).toFixed(2));
+    const avgCost = days.length > 0 ? (a.total_cost_usd / Math.max(days.length, 1)) : 0;
+    setText('acCostAvg', '$' + avgCost.toFixed(3));
+    setText('acTokensTotal', fmt(a.total_tokens || 0));
+    setText('acModel', a.model_primary || '--');
+    // Comparison bars
+    const totalBoth = (a.total_cost_usd || 0) + (c.total_cost_usd || 0);
+    const cPct = totalBoth > 0 ? ((c.total_cost_usd || 0) / totalBoth * 100) : 50;
+    const aPct = totalBoth > 0 ? ((a.total_cost_usd || 0) / totalBoth * 100) : 50;
+    setText('acCmpClaritaCost', '$' + (c.total_cost_usd || 0).toFixed(2));
+    setText('acCmpAmiraCost', '$' + (a.total_cost_usd || 0).toFixed(2));
+    const cBar = document.getElementById('acCmpClaritaBar');
+    const aBar = document.getElementById('acCmpAmiraBar');
+    if (cBar) cBar.style.width = cPct + '%';
+    if (aBar) aBar.style.width = aPct + '%';
+    if (_amiraMetrics.generated_at) {
+      setText('acGeneratedAt', 'Datos generados: ' + new Date(_amiraMetrics.generated_at).toLocaleString('es-AR'));
+    }
+    // Cost chart
+    renderCostChart('acCostChart', days);
+    // Crons
+    renderCronsTable('acCronsTable', a.crons || [], 'amira');
+  }
+
+  function renderCostChart(chartId, days) {
+    const el = document.getElementById(chartId);
+    if (!el || !days.length) return;
+    const costs = days.map(d => d.cost_usd || 0);
+    const maxVal = Math.max(...costs, 0.001);
+    const chartHeight = 140;
+    const html = days.map(d => {
+      const cost = d.cost_usd || 0;
+      const h = Math.max(4, (cost / maxVal) * chartHeight);
+      const dateLabel = (d.date || '').slice(5);
+      return `<div class="bar-item">
+        <div class="bar-value">$${cost.toFixed(2)}</div>
+        <div class="bar" style="height:${h}px;background:rgba(168,85,247,0.7);"></div>
+        <div class="bar-label">${dateLabel}</div>
+      </div>`;
+    }).join('');
+    el.innerHTML = html || '<div style="color:var(--text-muted);font-size:13px;">Sin datos</div>';
+  }
+
+  function setText(id, val) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = val;
+  }
+
+  // ── Amira Dashboard Logic ──────────────────────────────────────────────────
+  function fmt(n) {
+    if (n === null || n === undefined) return '--';
+    if (n >= 1e9) return (n / 1e9).toFixed(1) + 'B';
+    if (n >= 1e6) return (n / 1e6).toFixed(1) + 'M';
+    if (n >= 1e3) return (n / 1e3).toFixed(1) + 'K';
+    return String(n);
+  }
+
+  function setAmiraTab(tab) {
+    _amiraCurrentTab = tab;
+    const tabs = { clarita: 'amiraTabClarita', amira: 'amiraTabAmira', compare: 'amiraTabCompare' };
+    const views = { clarita: 'amiraViewClarita', amira: 'amiraViewAmira', compare: 'amiraViewCompare' };
+    Object.entries(tabs).forEach(([k, id]) => {
+      const el = document.getElementById(id);
+      if (el) {
+        el.style.background = k === tab ? 'var(--accent)' : 'transparent';
+        el.style.color = k === tab ? '#fff' : 'var(--text-muted)';
+      }
+    });
+    Object.entries(views).forEach(([k, id]) => {
+      const el = document.getElementById(id);
+      if (el) el.style.display = k === tab ? '' : 'none';
+    });
+    if (_amiraMetrics) renderAmiraTab(tab);
+  }
+
+  function cronStatusPill(job) {
+    if (!job.enabled) return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:rgba(100,100,120,0.3);color:var(--text-muted);">Disabled</span>';
+    if (job.consecutive_errors >= 3) return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:rgba(239,68,68,0.2);color:var(--red);">Error x' + job.consecutive_errors + '</span>';
+    if (job.last_status === 'error' || job.consecutive_errors > 0) return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:rgba(234,179,8,0.2);color:var(--yellow);">Warning</span>';
+    if (job.last_status === 'ok') return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:rgba(34,197,94,0.2);color:var(--green);">OK</span>';
+    return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:11px;font-weight:600;background:rgba(100,100,120,0.3);color:var(--text-muted);">Unknown</span>';
+  }
+
+  function fmtNextRun(ms) {
+    if (!ms) return '--';
+    const diff = ms - Date.now();
+    if (diff < 0) return 'Overdue';
+    const h = Math.floor(diff / 3600000);
+    const m = Math.floor((diff % 3600000) / 60000);
+    if (h > 24) return Math.floor(h / 24) + 'd';
+    if (h > 0) return h + 'h ' + m + 'm';
+    return m + 'm';
+  }
+
+  function renderCronsTable(containerId, crons, botName) {
+    const el = document.getElementById(containerId);
+    if (!el) return;
+    if (!crons || crons.length === 0) { el.innerHTML = '<p style="color:var(--text-muted);font-size:13px;">No hay cron jobs</p>'; return; }
+    let html = '<table style="width:100%;border-collapse:collapse;font-size:13px;">';
+    html += '<thead><tr style="border-bottom:1px solid var(--border);">';
+    html += '<th style="text-align:left;padding:8px 12px;color:var(--text-muted);font-weight:500;font-size:11px;text-transform:uppercase;">Nombre</th>';
+    html += '<th style="text-align:left;padding:8px 12px;color:var(--text-muted);font-weight:500;font-size:11px;text-transform:uppercase;">Schedule</th>';
+    html += '<th style="text-align:left;padding:8px 12px;color:var(--text-muted);font-weight:500;font-size:11px;text-transform:uppercase;">Estado</th>';
+    html += '<th style="text-align:left;padding:8px 12px;color:var(--text-muted);font-weight:500;font-size:11px;text-transform:uppercase;">Próximo</th>';
+    if (botName === 'amira') {
+      html += '<th style="text-align:center;padding:8px 12px;color:var(--text-muted);font-weight:500;font-size:11px;text-transform:uppercase;">Toggle</th>';
+    }
+    html += '</tr></thead><tbody>';
+    crons.forEach((job, i) => {
+      const rowBg = i % 2 === 0 ? '' : 'background:rgba(255,255,255,0.02);';
+      html += `<tr style="${rowBg}border-bottom:1px solid rgba(255,255,255,0.04);">`;
+      html += `<td style="padding:10px 12px;color:var(--text-primary);max-width:200px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="${job.name}">${job.name}</td>`;
+      html += `<td style="padding:10px 12px;color:var(--text-secondary);font-family:'JetBrains Mono',monospace;font-size:11px;">${job.schedule || '--'}</td>`;
+      html += `<td style="padding:10px 12px;">${cronStatusPill(job)}</td>`;
+      html += `<td style="padding:10px 12px;color:var(--text-secondary);font-size:12px;">${fmtNextRun(job.next_run_ms)}</td>`;
+      if (botName === 'amira') {
+        const checked = job.enabled ? 'checked' : '';
+        const cronId = job.id || '';
+        html += `<td style="padding:10px 12px;text-align:center;"><label style="position:relative;display:inline-block;width:36px;height:20px;cursor:pointer;">
+          <input type="checkbox" ${checked} onchange="toggleAmiraCron('${cronId}', this.checked)" style="opacity:0;width:0;height:0;">
+          <span style="position:absolute;inset:0;background:${job.enabled ? 'var(--accent)' : 'var(--bg-tertiary)'};border-radius:10px;transition:0.3s;border:1px solid var(--border);"></span>
+          <span style="position:absolute;top:2px;left:${job.enabled ? '18px' : '2px'};width:16px;height:16px;background:#fff;border-radius:50%;transition:0.3s;"></span>
+        </label></td>`;
+      }
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+  }
+
+  function renderAmiraTab(tab) {
+    if (!_amiraMetrics) return;
+    const c = _amiraMetrics.clarita || {};
+    const a = _amiraMetrics.amira || {};
+    const last14 = (days) => (days || []).slice(-14);
+
+    if (tab === 'clarita') {
+      const days = c.days || [];
+      document.getElementById('claritaTotalCost30d').textContent = '$' + (c.total_cost_usd || 0).toFixed(2);
+      document.getElementById('claritaTotalTokens30d').textContent = fmt(c.total_tokens || 0);
+      const s7 = c.stats_7d || {};
+      document.getElementById('claritaMsgsIn7d').textContent = fmt(s7.total_msgs_in || 0);
+      const activeCrons = (c.crons || []).filter(j => j.enabled).length;
+      document.getElementById('claritaActiveCrons').textContent = activeCrons;
+      renderCronsTable('claritaCronsTable', c.crons || [], 'clarita');
+      renderDailyChart('claritaDailyChart', last14(days), 'Clarita', 'rgba(99,102,241,0.8)', 'rgba(99,102,241,0.2)');
+    }
+
+    if (tab === 'amira') {
+      const days = a.days || [];
+      document.getElementById('amiraTotalCost30d').textContent = '$' + (a.total_cost_usd || 0).toFixed(2);
+      document.getElementById('amiraTotalTokens30d').textContent = fmt(a.total_tokens || 0);
+      const s7 = a.stats_7d || {};
+      document.getElementById('amiraMsgsIn7d').textContent = fmt(s7.total_msgs_in || 0);
+      const activeCrons = (a.crons || []).filter(j => j.enabled).length;
+      document.getElementById('amiraActiveCrons').textContent = activeCrons;
+      renderCronsTable('amiraCronsTable', a.crons || [], 'amira');
+      renderDailyChart('amiraDailyChart', last14(days), 'Amira', 'rgba(168,85,247,0.8)', 'rgba(168,85,247,0.2)');
+    }
+
+    if (tab === 'compare') {
+      const cs7 = c.stats_7d || {};
+      const as7 = a.stats_7d || {};
+      document.getElementById('cmpClaritaCost').textContent = '$' + (c.total_cost_usd || 0).toFixed(2);
+      document.getElementById('cmpClaritaTokens').textContent = fmt(c.total_tokens || 0);
+      document.getElementById('cmpClaritaMsgs').textContent = fmt(cs7.total_msgs_in || 0);
+      const waEl = document.getElementById('cmpClaritaWA');
+      if (waEl) { const wa = c.whatsapp || 'unknown'; waEl.textContent = wa; waEl.style.color = wa === 'connected' ? 'var(--green)' : 'var(--text-muted)'; }
+      document.getElementById('cmpAmiraCost').textContent = '$' + (a.total_cost_usd || 0).toFixed(2);
+      document.getElementById('cmpAmiraTokens').textContent = fmt(a.total_tokens || 0);
+      document.getElementById('cmpAmiraMsgs').textContent = fmt(as7.total_msgs_in || 0);
+      const waElA = document.getElementById('cmpAmiraWA');
+      if (waElA) { const wa = a.whatsapp || 'unknown'; waElA.textContent = wa; waElA.style.color = wa === 'connected' ? 'var(--green)' : 'var(--text-muted)'; }
+      const genAt = document.getElementById('metricsGeneratedAt');
+      if (genAt && _amiraMetrics.generated_at) genAt.textContent = 'Datos generados: ' + new Date(_amiraMetrics.generated_at).toLocaleString();
+      renderCompareDailyChart(last14(c.days || []), last14(a.days || []));
+    }
+  }
+
+  function renderDailyChart(chartId, days, label, borderColor, bgColor) {
+    const el = document.getElementById(chartId);
+    if (!el) return;
+    const totals = days.map(d => (d.msgs_in || 0) + (d.msgs_out || 0));
+    const maxVal = Math.max(...totals, 1);
+    const chartHeight = 120;
+    const html = days.map(d => {
+      const total = (d.msgs_in || 0) + (d.msgs_out || 0);
+      const h = Math.max(4, (total / maxVal) * chartHeight);
+      const dateLabel = d.date.slice(5); // MM-DD
+      return `<div class="bar-item">
+        <div class="bar-value">${fmt(total)}</div>
+        <div class="bar" style="height:${h}px;background:${bgColor.replace('0.2','0.7')};"></div>
+        <div class="bar-label">${dateLabel}</div>
+      </div>`;
+    }).join('');
+    el.innerHTML = html || '<div style="color:var(--text-muted);font-size:13px;">Sin datos</div>';
+  }
+
+  function renderCompareDailyChart(claritaDays, amiraDays) {
+    const el = document.getElementById('compareDailyChart');
+    if (!el) return;
+    const claritaTotals = claritaDays.map(d => (d.msgs_in || 0) + (d.msgs_out || 0));
+    const amiraTotals = amiraDays.map(d => (d.msgs_in || 0) + (d.msgs_out || 0));
+    const maxVal = Math.max(...claritaTotals, ...amiraTotals, 1);
+    const chartHeight = 100;
+    const days = claritaDays.length;
+    let html = '<div style="display:flex;gap:4px;align-items:flex-end;overflow-x:auto;">';
+    for (let i = 0; i < days; i++) {
+      const cH = Math.max(3, (claritaTotals[i] / maxVal) * chartHeight);
+      const aH = Math.max(3, (amiraTotals[i] / maxVal) * chartHeight);
+      const dateLabel = (claritaDays[i] && claritaDays[i].date) ? claritaDays[i].date.slice(5) : '';
+      html += `<div style="display:flex;flex-direction:column;align-items:center;gap:2px;flex:1;min-width:28px;">
+        <div style="display:flex;gap:2px;align-items:flex-end;">
+          <div title="Clarita: ${claritaTotals[i]}" style="width:8px;height:${cH}px;background:rgba(99,102,241,0.7);border-radius:2px 2px 0 0;"></div>
+          <div title="Amira: ${amiraTotals[i]}" style="width:8px;height:${aH}px;background:rgba(168,85,247,0.7);border-radius:2px 2px 0 0;"></div>
+        </div>
+        <div style="font-size:9px;color:var(--text-muted);white-space:nowrap;">${dateLabel}</div>
+      </div>`;
+    }
+    html += '</div><div style="display:flex;gap:16px;margin-top:8px;font-size:11px;">';
+    html += '<span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:10px;height:10px;background:rgba(99,102,241,0.7);border-radius:2px;"></span> Clarita</span>';
+    html += '<span style="display:flex;align-items:center;gap:4px;"><span style="display:inline-block;width:10px;height:10px;background:rgba(168,85,247,0.7);border-radius:2px;"></span> Amira</span>';
+    html += '</div>';
+    el.innerHTML = html;
+  }
+
+  async function toggleAmiraCron(id, enabled) {
+    if (!id) { showToast('Este cron no tiene ID — no se puede toggle remotamente', 'warn'); return; }
+    try {
+      const token = sessionStorage.getItem('dashboardToken') || localStorage.getItem('dashboardToken');
+      const resp = await fetch('/api/crons/amira/toggle', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ id, enabled })
+      });
+      const data = await resp.json();
+      if (data.success) {
+        showToast('Cron ' + (enabled ? 'habilitado' : 'deshabilitado') + ' en Amira', 'success');
+      } else {
+        showToast('Error: ' + (data.error || 'desconocido'), 'error');
+      }
+    } catch (e) {
+      showToast('Error al contactar servidor: ' + e.message, 'error');
+    }
+  }
+
+  async function loadAmiraPage() {
+    try {
+      const token = sessionStorage.getItem('dashboardToken') || localStorage.getItem('dashboardToken');
+      const resp = await fetch('/api/metrics-summary', {
+        headers: { 'Authorization': 'Bearer ' + token }
+      });
+      _amiraMetrics = await resp.json();
+      renderAmiraTab(_amiraCurrentTab);
+    } catch (e) {
+      console.error('Amira load error', e);
+    }
+  }
+
+  // Hook into page navigation — also trigger Amira data re-render when changing pages in amira mode
+  (function() {
+    // Listen for page navigation to update Amira content if in amira mode
+    document.querySelectorAll('.nav-item[data-page]').forEach(item => {
+      item.addEventListener('click', () => {
+        if (_currentBot === 'amira') {
+          setTimeout(() => {
+            renderAmiraOverview();
+            renderAmiraCosts();
+          }, 50);
+        }
+      });
+    });
+  })();
+  // ── End Amira/Bot Logic ────────────────────────────────────────────────────
+  </script>
 </body>
 
 </html>
