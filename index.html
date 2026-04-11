@@ -1375,6 +1375,16 @@ body.light-theme ::selection { background: rgba(99,102,241,0.2); }
     <div class="sidebar-header">
       <div class="logo">✨</div>
       <div class="brand">Agent</div>
+      <div id="botSelector" style="display:flex;background:var(--bg-primary);border:1px solid var(--border);border-radius:8px;overflow:hidden;padding:2px;gap:2px;margin-top:8px;">
+        <button id="botBtnClarita" onclick="switchBot('clarita')"
+          style="flex:1;padding:4px 8px;border:none;border-radius:6px;cursor:pointer;font-size:12px;background:var(--accent);color:white;">
+          🤖 Clarita
+        </button>
+        <button id="botBtnAmira" onclick="switchBot('amira')"
+          style="flex:1;padding:4px 8px;border:none;border-radius:6px;cursor:pointer;font-size:12px;background:transparent;color:var(--text-muted);">
+          🌸 Amira
+        </button>
+      </div>
     </div>
     <nav class="nav">
       <div class="nav-item active" data-page="overview">
@@ -5692,6 +5702,27 @@ async function dockerAction(action, id) {
     showToast(label + ' done', 'success');
     loadDocker();
   } catch(e) { showToast('Error: ' + e.message, 'warning'); }
+}
+
+// ── Bot Selector (Clarita/Amira) ──
+let currentBot = 'clarita';
+function switchBot(bot) {
+  currentBot = bot;
+  const btnC = document.getElementById('botBtnClarita');
+  const btnA = document.getElementById('botBtnAmira');
+  if (bot === 'clarita') {
+    btnC.style.background = 'var(--accent)'; btnC.style.color = 'white';
+    btnA.style.background = 'transparent'; btnA.style.color = 'var(--text-muted)';
+  } else {
+    btnA.style.background = 'var(--purple, #a855f7)'; btnA.style.color = 'white';
+    btnC.style.background = 'transparent'; btnC.style.color = 'var(--text-muted)';
+  }
+  // Show/hide clarita-only nav items
+  document.querySelectorAll('.clarita-only').forEach(el => {
+    el.style.display = bot === 'clarita' ? '' : 'none';
+  });
+  // Refresh data with new agent
+  if (typeof refreshAll === 'function') refreshAll();
 }
 </script>
 </body>

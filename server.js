@@ -9,7 +9,12 @@ const PORT = parseInt(process.env.DASHBOARD_PORT || '7000');
 const OPENCLAW_DIR = process.env.OPENCLAW_DIR || path.join(os.homedir(), '.openclaw');
 const WORKSPACE_DIR = process.env.WORKSPACE_DIR || process.env.OPENCLAW_WORKSPACE || process.cwd();
 const AGENT_ID = process.env.OPENCLAW_AGENT || 'main';
-const sessDir = path.join(OPENCLAW_DIR, 'agents', AGENT_ID, 'sessions');
+const agentsRoot = path.join(OPENCLAW_DIR, 'agents');
+function getSessDir(agentId) {
+  const safeId = String(agentId || AGENT_ID).replace(/[^a-zA-Z0-9\-_]/g, '');
+  return path.join(agentsRoot, safeId, 'sessions');
+}
+const sessDir = getSessDir(AGENT_ID);
 const cronFile = path.join(OPENCLAW_DIR, 'cron', 'jobs.json');
 const dataDir = path.join(WORKSPACE_DIR, 'data');
 const memoryDir = path.join(WORKSPACE_DIR, 'memory');
@@ -43,6 +48,11 @@ const DEFAULT_MODEL_PRICING = {
   'anthropic/claude-3-5-haiku-latest': { input: 0.80, output: 4.00, cacheRead: 0.08, cacheWrite: 1.00 },
   'openai/gpt-4o-mini': { input: 0.15, output: 0.60, cacheRead: 0.075, cacheWrite: 0.30 },
   'openai/gpt-4.1-mini': { input: 0.40, output: 1.60, cacheRead: 0.20, cacheWrite: 0.80 },
+  'openai/gpt-4o': { input: 2.50, output: 10.00, cacheRead: 1.25, cacheWrite: 5.00 },
+  'openai/gpt-4-turbo': { input: 10.00, output: 30.00, cacheRead: 5.00, cacheWrite: 20.00 },
+  'openai/gpt': { input: 2.50, output: 10.00, cacheRead: 1.25, cacheWrite: 5.00 },
+  'deepseek/deepseek-chat': { input: 0.28, output: 0.42, cacheRead: 0.028, cacheWrite: 0.28 },
+  'openrouter/qwen/qwen3.5-27b': { input: 0.195, output: 1.56, cacheRead: 0.05, cacheWrite: 0.195 },
   'google/gemini-3-pro-preview': { input: 1.25, output: 10.00, cacheRead: 0.31, cacheWrite: 4.50 },
   'google/gemini-3-flash-preview': { input: 0.15, output: 0.60, cacheRead: 0.04, cacheWrite: 0.15 },
   'xai/grok-4-1-fast': { input: 0.20, output: 0.50, cacheRead: 0.05, cacheWrite: 0.20 }
@@ -73,6 +83,13 @@ function normalizeModel(provider, model) {
   if (p === 'openai') {
     if (ml.startsWith('gpt-4o-mini')) return 'gpt-4o-mini';
     if (ml.startsWith('gpt-4.1-mini')) return 'gpt-4.1-mini';
+    if (ml.startsWith('gpt-4o')) return 'gpt-4o';
+    if (ml.startsWith('gpt-4-turbo')) return 'gpt-4-turbo';
+    if (ml.includes('gpt') || ml.includes('codex')) return 'gpt';
+  }
+  if (p === 'deepseek') return 'deepseek-chat';
+  if (p === 'openrouter') {
+    if (ml.includes('qwen3.5')) return 'qwen/qwen3.5-27b';
   }
   if (p === 'google' && ml.startsWith('gemini-3-flash-preview')) return 'gemini-3-flash-preview';
   if (p === 'xai' && ml.startsWith('grok-4-1-fast')) return 'grok-4-1-fast';
